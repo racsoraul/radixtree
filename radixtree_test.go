@@ -40,7 +40,6 @@ func TestLongestCommonPrefix(t *testing.T) {
 }
 
 func TestTree_Search(t *testing.T) {
-
 	testCases := []struct {
 		name          string
 		setup         func(*Tree)
@@ -280,10 +279,27 @@ func setupMultipleEntries(t *Tree) {
 // BenchmarkTree_Search Measures the performance of the Search method for a tree
 // with more than ~370K entries in it.
 func BenchmarkTree_Search(b *testing.B) {
-	words, err := os.Open("./testdata/words_alpha.txt")
+	tree, err := createTreeWithWordsFile()
 	if err != nil {
 		b.Fatal(err)
 	}
+	b.Logf("Loaded tree with %d entries", tree.Size())
+
+	for b.Loop() {
+		_, found := tree.Search("hoar")
+		if !found {
+			b.Fatal("No match")
+		}
+	}
+}
+
+func createTreeWithWordsFile() (*Tree, error) {
+	words, err := os.Open("./testdata/words_alpha.txt")
+	if err != nil {
+		return nil, err
+	}
+	defer words.Close()
+
 	scanner := bufio.NewScanner(words)
 	tree := New()
 	wordCounter := 1
@@ -292,17 +308,5 @@ func BenchmarkTree_Search(b *testing.B) {
 		tree.Insert(word, wordCounter)
 		wordCounter++
 	}
-	b.Logf("Loaded %d words into tree", wordCounter)
-
-	for b.Loop() {
-		_, found := tree.Search("hoar")
-		if !found {
-			b.Fatal("No match")
-		}
-	}
-
-	err = words.Close()
-	if err != nil {
-		b.Fatal(err)
-	}
+	return tree, scanner.Err()
 }

@@ -1,8 +1,9 @@
 package radixtree
 
-// Tree Represents a Radix Tree.
+// Tree Represents a Radix Tree. Operations are not concurrency safe.
 type Tree struct {
 	root *Node
+	size int
 }
 
 // New Creates a new Radix Tree.
@@ -10,6 +11,11 @@ func New() *Tree {
 	return &Tree{
 		root: NewNode(false, nil),
 	}
+}
+
+// Size Returns the number of entries in the tree.
+func (t *Tree) Size() int {
+	return t.size
 }
 
 // String Returns a string representation of the Tree.
@@ -35,12 +41,16 @@ func (t *Tree) Insert(entry string, data any) {
 		if edge == nil {
 			// No edge found. Create a new one.
 			currentNode.children[entry[0]] = NewEdge(entry, NewNode(true, data))
+			t.size++
 			return
 		}
 
 		if entrySuffix == "" && edgeSuffix == "" {
 			// Exact match.
-			edge.destination.isKey = true
+			if !edge.destination.isKey {
+				edge.destination.isKey = true
+				t.size++
+			}
 			edge.destination.data = data
 			return
 		}
@@ -51,6 +61,7 @@ func (t *Tree) Insert(entry string, data any) {
 			currentNode.children[prefix[0]] = entryEdge
 			edge.label = edgeSuffix
 			entryEdge.destination.children[edgeSuffix[0]] = edge
+			t.size++
 			return
 		}
 
@@ -68,6 +79,7 @@ func (t *Tree) Insert(entry string, data any) {
 		bridge.destination.children[edgeSuffix[0]] = edge
 		newEntryNode := NewEdge(entrySuffix, NewNode(true, data))
 		bridge.destination.children[entrySuffix[0]] = newEntryNode
+		t.size++
 		return
 	}
 }

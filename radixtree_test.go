@@ -8,23 +8,54 @@ import (
 
 func TestLongestCommonPrefix(t *testing.T) {
 	testCases := []struct {
+		name                                                     string
 		entry, label                                             string
 		expectedPrefix, expectedEntrySuffix, expectedLabelSuffix string
 	}{
-		// Case one: "entry" is a prefix of "label".
-		{"help", "helping", "help", "", "ing"},
-		// Case two: "label" is a prefix of "entry".
-		{"helping", "help", "help", "ing", ""},
-		// Case three: "entry" and "label" share a common prefix.
-		{"hello", "helping", "hel", "lo", "ping"},
-		// Case four: "entry" and "label" have no common prefix.
-		{"hello", "world", "", "hello", "world"},
-		// Case five: "entry" and "label" are identical.
-		{"hello", "hello", "hello", "", ""},
+		{
+			name:                "Case one: entry is a prefix of label",
+			entry:               "help",
+			label:               "helping",
+			expectedPrefix:      "help",
+			expectedEntrySuffix: "",
+			expectedLabelSuffix: "ing",
+		},
+		{
+			name:                "Case two: label is prefix of entry",
+			entry:               "helping",
+			label:               "help",
+			expectedPrefix:      "help",
+			expectedEntrySuffix: "ing",
+			expectedLabelSuffix: "",
+		},
+		{
+			name:                "Case three: entry and label share a common prefix",
+			entry:               "hello",
+			label:               "helping",
+			expectedPrefix:      "hel",
+			expectedEntrySuffix: "lo",
+			expectedLabelSuffix: "ping",
+		},
+		{
+			name:                "Case four: entry and label have no common prefix",
+			entry:               "hello",
+			label:               "world",
+			expectedPrefix:      "",
+			expectedEntrySuffix: "hello",
+			expectedLabelSuffix: "world",
+		},
+		{
+			name:                "Case five: entry and label are identical",
+			entry:               "hello",
+			label:               "hello",
+			expectedPrefix:      "hello",
+			expectedEntrySuffix: "",
+			expectedLabelSuffix: "",
+		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.entry+"_"+tc.label, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			result, entrySuffix, labelSuffix := longestCommonPrefix(tc.entry, tc.label)
 			if result != tc.expectedPrefix {
 				t.Fatalf("Expected prefix %q, got %q", tc.expectedPrefix, result)

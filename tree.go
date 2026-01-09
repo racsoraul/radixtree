@@ -8,7 +8,7 @@ type Tree struct {
 // New Creates a new Radix Tree.
 func New() *Tree {
 	return &Tree{
-		root: NewNode(false),
+		root: NewNode(false, nil),
 	}
 }
 
@@ -20,52 +20,88 @@ func (t *Tree) String() string {
 	return t.root.string(0)
 }
 
-// Insert Adds new text to the tree.
-func (t *Tree) Insert(text string) {
-	if text == "" {
+// Insert Adds a new entry to the tree or updates an existing one.
+func (t *Tree) Insert(entry string, data any) {
+	if entry == "" {
 		t.root.isKey = true
+		t.root.data = data
 		return
 	}
 
 	currentNode := t.root
 
 	for {
-		edge, prefix, textSuffix, edgeSuffix := currentNode.matchEdge(text)
+		edge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
 		if edge == nil {
 			// No edge found. Create a new one.
-			currentNode.children[text[0]] = NewEdge(text, NewNode(true))
+			currentNode.children[entry[0]] = NewEdge(entry, NewNode(true, data))
 			return
 		}
 
-		if textSuffix == "" && edgeSuffix == "" {
+		if entrySuffix == "" && edgeSuffix == "" {
 			// Exact match.
 			edge.destination.isKey = true
+			edge.destination.data = data
 			return
 		}
 
-		if textSuffix == "" {
-			// The text is a prefix of the label. New node before child.
-			textEdge := NewEdge(prefix, NewNode(true))
-			currentNode.children[prefix[0]] = textEdge
+		if entrySuffix == "" {
+			// The entry is a prefix of the label. New node before child.
+			entryEdge := NewEdge(prefix, NewNode(true, data))
+			currentNode.children[prefix[0]] = entryEdge
 			edge.label = edgeSuffix
-			textEdge.destination.children[edgeSuffix[0]] = edge
+			entryEdge.destination.children[edgeSuffix[0]] = edge
 			return
 		}
 
 		if edgeSuffix == "" {
-			// Label is a prefix of text. Traverse the edge to the child node.
+			// Label is a prefix of the entry. Traverse the edge to the child node.
 			currentNode = edge.destination
-			text = textSuffix
+			entry = entrySuffix
 			continue
 		}
 
 		// There's a common prefix. We need to split the edge.
-		bridge := NewEdge(prefix, NewNode(false))
+		bridge := NewEdge(prefix, NewNode(false, nil))
 		currentNode.children[prefix[0]] = bridge
 		edge.label = edgeSuffix
 		bridge.destination.children[edgeSuffix[0]] = edge
-		newTextNode := NewEdge(textSuffix, NewNode(true))
-		bridge.destination.children[textSuffix[0]] = newTextNode
+		newEntryNode := NewEdge(entrySuffix, NewNode(true, data))
+		bridge.destination.children[entrySuffix[0]] = newEntryNode
 		return
+	}
+}
+
+// Search Returns the data and true if the entry is in the tree. Returns nil and false otherwise.
+func (t *Tree) Search(entry string) (any, bool) {
+	if entry == "" {
+		return t.root.data, t.root.isKey
+	}
+
+	currentNode := t.root
+
+	for {
+		edge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
+		if edge == nil {
+			return nil, false
+		}
+
+		if entrySuffix != "" && edgeSuffix != "" {
+			// Partial match.
+			return nil, false
+		}
+
+		if entrySuffix == "" {
+			if edgeSuffix == "" {
+				// Exact match.
+				return edge.destination.data, edge.destination.isKey
+			}
+			// Partial match. The entry is not a key node.
+			return nil, false
+		}
+
+		// Move to the next child node.
+		currentNode = edge.destination
+		entry = entrySuffix
 	}
 }

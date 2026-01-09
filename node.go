@@ -6,13 +6,15 @@ import "strings"
 type Node struct {
 	isKey    bool
 	children map[byte]*Edge
+	data     any
 }
 
 // NewNode Creates a new Node.
-func NewNode(isKey bool) *Node {
+func NewNode(isKey bool, data any) *Node {
 	return &Node{
 		isKey:    isKey,
 		children: make(map[byte]*Edge),
+		data:     data,
 	}
 }
 
@@ -30,30 +32,30 @@ func NewEdge(label string, dest *Node) *Edge {
 	}
 }
 
-// matchEdge Returns the edge that matches the first character of text, if any,
-// the longest common prefix of text and edge label, and the suffixes of text and edge label.
-func (n *Node) matchEdge(text string) (matchedEdge *Edge, commonPrefix, textSuffix, edgeSuffix string) {
-	edge, ok := n.children[text[0]]
+// matchEdge Returns the edge that matches the first character of the entry, if any,
+// the longest common prefix of entry and edge label, and the suffixes of entry and edge label.
+func (n *Node) matchEdge(entry string) (matchedEdge *Edge, commonPrefix, entrySuffix, edgeSuffix string) {
+	edge, ok := n.children[entry[0]]
 	if !ok {
-		return nil, "", text, ""
+		return nil, "", entry, ""
 	}
 
-	commonPrefix, textSuffix, edgeSuffix = longestCommonPrefix(text, edge.label)
-	return edge, commonPrefix, textSuffix, edgeSuffix
+	commonPrefix, entrySuffix, edgeSuffix = longestCommonPrefix(entry, edge.label)
+	return edge, commonPrefix, entrySuffix, edgeSuffix
 }
 
-// longestCommonPrefix Returns the longest common prefix of text and label.
-// The returned suffixes are the suffixes of text and label that are not part of the prefix.
-func longestCommonPrefix(text, label string) (prefix, textSuffix, edgeSuffix string) {
-	minLen := min(len(text), len(label))
+// longestCommonPrefix Returns the longest common prefix between entry and label.
+// The returned suffixes are the suffixes of entry and label that are not part of the prefix.
+func longestCommonPrefix(entry, label string) (prefix, entrySuffix, edgeSuffix string) {
+	minLen := min(len(entry), len(label))
 
 	for i := 0; i < minLen; i++ {
-		if text[i] != label[i] {
-			return text[:i], text[i:], label[i:]
+		if entry[i] != label[i] {
+			return entry[:i], entry[i:], label[i:]
 		}
 	}
 
-	return text[:minLen], text[minLen:], label[minLen:]
+	return entry[:minLen], entry[minLen:], label[minLen:]
 }
 
 // String Returns a string representation of the Node. It colors in

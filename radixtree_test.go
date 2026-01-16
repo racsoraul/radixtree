@@ -288,6 +288,67 @@ func TestTree_Search(t *testing.T) {
 	}
 }
 
+func TestTree_LongestPrefix(t *testing.T) {
+	testCases := []struct {
+		name           string
+		setup          func(*Tree)
+		key            string
+		expectedPrefix string
+	}{
+		{
+			name:  "empty tree",
+			setup: func(t *Tree) {},
+			key:   "hello",
+		},
+		{
+			name:  "single entry, prefix of entry",
+			setup: func(t *Tree) { t.Insert("hello", 50) },
+			key:   "he",
+		},
+		{
+			name:           "single entry, entry is prefix of key",
+			setup:          func(t *Tree) { t.Insert("hello", 50) },
+			key:            "hellothere",
+			expectedPrefix: "hello",
+		},
+		{
+			name:           "single entry, key is exact match of entry",
+			setup:          func(t *Tree) { t.Insert("hello", 50) },
+			key:            "hello",
+			expectedPrefix: "hello",
+		},
+		{
+			name:           "multiple entries, common prefix",
+			setup:          setupMultipleEntries,
+			key:            "antagonist",
+			expectedPrefix: "ant",
+		},
+		{
+			name:           "multiple entries, common prefix",
+			setup:          setupMultipleEntries,
+			key:            "antiacid",
+			expectedPrefix: "ant",
+		},
+		{
+			name:           "multiple entries, key is exact match of entry",
+			setup:          setupMultipleEntries,
+			key:            "ant",
+			expectedPrefix: "ant",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := New()
+			tc.setup(tree)
+			prefix := tree.LongestPrefix(tc.key)
+			if prefix != tc.expectedPrefix {
+				t.Fatalf("want prefix=%q for key %q, got prefix=%q", tc.expectedPrefix, tc.key, prefix)
+			}
+		})
+	}
+}
+
 func setupDeepTree(t *Tree) {
 	t.Insert("a", 1)
 	t.Insert("ab", 12)
@@ -305,6 +366,9 @@ func setupMultipleEntries(t *Tree) {
 	t.Insert("car", 30)
 	t.Insert("crazy", 70)
 	t.Insert("crash", 72)
+	t.Insert("antihero", 100)
+	t.Insert("antecede", 101)
+	t.Insert("antagony", 102)
 }
 
 // BenchmarkTree_Search Measures the performance of the Search method for a tree

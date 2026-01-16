@@ -117,3 +117,39 @@ func (t *Tree) Search(entry string) (any, bool) {
 		entry = entrySuffix
 	}
 }
+
+// LongestPrefix Returns the longest prefix of the entry that is also a key in the tree.
+func (t *Tree) LongestPrefix(entry string) string {
+	if entry == "" {
+		return ""
+	}
+
+	currentNode := t.root
+	longestPrefix := ""
+
+	for {
+		edge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
+		if edge == nil {
+			return longestPrefix
+		}
+
+		if entrySuffix != "" && edgeSuffix != "" {
+			// Partial match.
+			return longestPrefix
+		}
+
+		if entrySuffix == "" {
+			if edgeSuffix == "" {
+				// Exact match.
+				return longestPrefix + prefix
+			}
+			// Partial match. The entry is not a key node.
+			return longestPrefix
+		}
+
+		// Move to the next child node.
+		currentNode = edge.destination
+		entry = entrySuffix
+		longestPrefix += prefix
+	}
+}

@@ -371,9 +371,9 @@ func setupMultipleEntries(t *Tree) {
 	t.Insert("antagony", 102)
 }
 
-// BenchmarkTree_Search Measures the performance of the Search method for a tree
+// BenchmarkTree_SearchBig Measures the performance of the Search method for a tree
 // with more than ~370K entries in it.
-func BenchmarkTree_Search(b *testing.B) {
+func BenchmarkTree_SearchBig(b *testing.B) {
 	tree, err := createTreeWithWordsFile()
 	if err != nil {
 		b.Fatal(err)
@@ -382,6 +382,19 @@ func BenchmarkTree_Search(b *testing.B) {
 
 	for b.Loop() {
 		_, found := tree.Search("hoar")
+		if !found {
+			b.Fatal("No match")
+		}
+	}
+}
+
+// BenchmarkTree_SearchSmall Measures the performance of the Search method for a small tree.
+func BenchmarkTree_SearchSmall(b *testing.B) {
+	tree := New()
+	setupMultipleEntries(tree)
+
+	for b.Loop() {
+		_, found := tree.Search("height")
 		if !found {
 			b.Fatal("No match")
 		}

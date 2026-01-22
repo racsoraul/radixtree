@@ -40,7 +40,7 @@ func TestLongestCommonPrefix(t *testing.T) {
 			name:                "Case four: entry and label have no common prefix",
 			entry:               "hello",
 			label:               "world",
-			expectedPrefix:      "",
+			expectedPrefix:      "", // No edge.
 			expectedEntrySuffix: "hello",
 			expectedLabelSuffix: "world",
 		},
@@ -397,6 +397,23 @@ func BenchmarkTree_SearchSmall(b *testing.B) {
 		_, found := tree.Search("height")
 		if !found {
 			b.Fatal("No match")
+		}
+	}
+}
+
+// BenchmarkTree_KeysWithPrefix Measures the performance of the KeysWithPrefix method by retrieving
+// keys starting with the prefix "a", yielding 25,417 results.
+func BenchmarkTree_KeysWithPrefix(b *testing.B) {
+	tree, err := createTreeWithWordsFile()
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Logf("Loaded tree with %d entries", tree.Size())
+
+	for b.Loop() {
+		results := tree.KeysWithPrefix("a")
+		if len(results) == 0 {
+			b.Fatal("No results")
 		}
 	}
 }

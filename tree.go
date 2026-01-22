@@ -118,7 +118,14 @@ func (t *Tree) Search(entry string) (any, bool) {
 	}
 }
 
-// LongestPrefix Returns the longest prefix of the entry that is also a key in the tree.
+// Delete Removes an entry from the tree. Returns true indicating
+// if the entry existed and was deleted, false otherwise.
+func (t *Tree) Delete(entry string) bool {
+	// TODO: Implement.
+	return false
+}
+
+// LongestPrefix Returns the longest prefix of the entry that is also a key node in the tree.
 func (t *Tree) LongestPrefix(entry string) string {
 	if entry == "" {
 		return ""
@@ -152,4 +159,55 @@ func (t *Tree) LongestPrefix(entry string) string {
 		entry = entrySuffix
 		longestPrefix += prefix
 	}
+}
+
+// KeysWithPrefix Returns a list of entry's keys in the tree that start with the given prefix.
+func (t *Tree) KeysWithPrefix(prefix string) []string {
+	if prefix == "" {
+		return nil
+	}
+
+	currentNode := t.root
+	accumulatedPrefix := prefix
+
+	for {
+		edge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(prefix)
+		if edge == nil {
+			// No match.
+			return nil
+		}
+
+		if entrySuffix != "" && edgeSuffix != "" {
+			// Partial match.
+			return nil
+		}
+
+		if entrySuffix == "" {
+			if edgeSuffix == "" {
+				// Exact match.
+				return edge.destination.allKeys(accumulatedPrefix)
+			}
+			// Partial match. The entry is not a key node.
+			return edge.destination.allKeys(accumulatedPrefix + edgeSuffix)
+		}
+
+		// Move to the next child node.
+		currentNode = edge.destination
+		prefix = entrySuffix
+		accumulatedPrefix += edgeSuffix
+	}
+}
+
+// allKeys Returns all keys prefixed by prefix that exist in the node.
+func (n *Node) allKeys(prefix string) []string {
+	keys := make([]string, 0)
+	if n.isKey {
+		keys = append(keys, prefix)
+	}
+
+	for _, edge := range n.children {
+		keys = append(keys, edge.destination.allKeys(prefix+edge.label)...)
+	}
+
+	return keys
 }

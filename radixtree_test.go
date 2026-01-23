@@ -2,7 +2,9 @@ package radixtree
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"strconv"
 	"testing"
 )
 
@@ -369,6 +371,19 @@ func setupMultipleEntries(t *Tree) {
 	t.Insert("antihero", 100)
 	t.Insert("antecede", 101)
 	t.Insert("antagony", 102)
+}
+
+// BenchmarkTree_Insert Measures the performance of the Insert method.
+func BenchmarkTree_Insert(b *testing.B) {
+	tree := New()
+	for i := 0; i < 10_000; i++ {
+		tree.Insert(fmt.Sprintf("%d", i), i)
+	}
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		tree.Insert(strconv.Itoa(n), n)
+	}
 }
 
 // BenchmarkTree_SearchBig Measures the performance of the Search method for a tree

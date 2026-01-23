@@ -1,19 +1,28 @@
 package radixtree
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Node Represents a node in the Radix Tree.
 type Node struct {
-	isKey    bool
 	children map[byte]*Edge
+	isKey    bool
+	size     int // Number of keys in this subtree (including this node if isKey).
 	data     any
 }
 
 // NewNode Creates a new Node.
 func NewNode(isKey bool, data any) *Node {
+	size := 0
+	if isKey {
+		size = 1
+	}
 	return &Node{
-		isKey:    isKey,
 		children: make(map[byte]*Edge),
+		isKey:    isKey,
+		size:     size,
 		data:     data,
 	}
 }
@@ -29,6 +38,18 @@ func NewEdge(label string, dest *Node) *Edge {
 	return &Edge{
 		destination: dest,
 		label:       label,
+	}
+}
+
+// allKeys Populates all keys prefixed by prefix that exist in the node into the
+// provided keys slice.
+func (n *Node) allKeys(prefix string, keys *[]string) {
+	if n.isKey {
+		*keys = append(*keys, prefix)
+	}
+
+	for _, edge := range n.children {
+		edge.destination.allKeys(prefix+edge.label, keys)
 	}
 }
 
@@ -82,7 +103,7 @@ func (n *Node) string(spacing int) string {
 		if edge.destination.isKey {
 			label = "\x1b[33m" + label + "\x1b[0m"
 		}
-		sb.WriteString(indent + label + "\n")
+		sb.WriteString(indent + label + fmt.Sprintf("(%d)", edge.destination.size) + "\n")
 		sb.WriteString(edge.destination.string(nextIndent))
 	}
 	return sb.String()

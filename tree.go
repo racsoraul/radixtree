@@ -29,19 +29,29 @@ func (t *Tree) String() string {
 // Insert Adds a new entry to the tree or updates an existing one.
 func (t *Tree) Insert(entry string, data any) {
 	if entry == "" {
-		t.root.isKey = true
+		if !t.root.isKey {
+			t.root.isKey = true
+			t.root.size++
+			t.size++
+		}
 		t.root.data = data
 		return
 	}
 
+	path := make([]*Node, 0, 1)
 	currentNode := t.root
 
 	for {
+		path = append(path, currentNode) // Keep track of the path to update the sizes.
 		edge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
 		if edge == nil {
 			// No edge found. Create a new one.
 			currentNode.children[entry[0]] = NewEdge(entry, NewNode(true, data))
 			t.size++
+			// Update sizes for all nodes in the path.
+			for _, node := range path {
+				node.size++
+			}
 			return
 		}
 
@@ -50,6 +60,10 @@ func (t *Tree) Insert(entry string, data any) {
 			if !edge.destination.isKey {
 				edge.destination.isKey = true
 				t.size++
+				// Update sizes for all nodes in the path.
+				for _, node := range path {
+					node.size++
+				}
 			}
 			edge.destination.data = data
 			return
@@ -62,6 +76,14 @@ func (t *Tree) Insert(entry string, data any) {
 			edge.label = edgeSuffix
 			entryEdge.destination.children[edgeSuffix[0]] = edge
 			t.size++
+
+			// It gets the old subtree size plus itself (1).
+			entryEdge.destination.size += edge.destination.size
+
+			// Update sizes for all nodes in the path.
+			for _, node := range path {
+				node.size++
+			}
 			return
 		}
 
@@ -80,6 +102,14 @@ func (t *Tree) Insert(entry string, data any) {
 		newEntryNode := NewEdge(entrySuffix, NewNode(true, data))
 		bridge.destination.children[entrySuffix[0]] = newEntryNode
 		t.size++
+
+		// Existing subtree size plus the new one (1).
+		bridge.destination.size = edge.destination.size + 1
+
+		// Update sizes for all nodes in the path.
+		for _, node := range path {
+			node.size++
+		}
 		return
 	}
 }
@@ -183,12 +213,18 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 		}
 
 		if entrySuffix == "" {
+			// Allocate all keys at once.
+			keys := make([]string, 0, edge.destination.size)
+
 			if edgeSuffix == "" {
 				// Exact match.
-				return edge.destination.allKeys(accumulatedPrefix)
+				edge.destination.allKeys(accumulatedPrefix, &keys)
+				return keys
 			}
+
 			// Partial match. The entry is not a key node.
-			return edge.destination.allKeys(accumulatedPrefix + edgeSuffix)
+			edge.destination.allKeys(accumulatedPrefix+edgeSuffix, &keys)
+			return keys
 		}
 
 		// Move to the next child node.
@@ -196,18 +232,4 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 		prefix = entrySuffix
 		accumulatedPrefix += edgeSuffix
 	}
-}
-
-// allKeys Returns all keys prefixed by prefix that exist in the node.
-func (n *Node) allKeys(prefix string) []string {
-	keys := make([]string, 0)
-	if n.isKey {
-		keys = append(keys, prefix)
-	}
-
-	for _, edge := range n.children {
-		keys = append(keys, edge.destination.allKeys(prefix+edge.label)...)
-	}
-
-	return keys
 }

@@ -416,9 +416,9 @@ func BenchmarkTree_SearchSmall(b *testing.B) {
 	}
 }
 
-// BenchmarkTree_KeysWithPrefix Measures the performance of the KeysWithPrefix method by retrieving
+// BenchmarkTree_KeysWithPrefixBig Measures the performance of the KeysWithPrefix method by retrieving
 // keys starting with the prefix "a", yielding 25,417 results.
-func BenchmarkTree_KeysWithPrefix(b *testing.B) {
+func BenchmarkTree_KeysWithPrefixBig(b *testing.B) {
 	tree, err := createTreeWithWordsFile()
 	if err != nil {
 		b.Fatal(err)
@@ -427,6 +427,20 @@ func BenchmarkTree_KeysWithPrefix(b *testing.B) {
 
 	for b.Loop() {
 		results := tree.KeysWithPrefix("a")
+		if len(results) == 0 {
+			b.Fatal("No results")
+		}
+	}
+}
+
+// BenchmarkTree_KeysWithPrefixSmall Measures the performance of the KeysWithPrefix method by retrieving
+// keys starting with the prefix "h", yielding 25,417 results.
+func BenchmarkTree_KeysWithPrefixSmall(b *testing.B) {
+	tree := New()
+	setupMultipleEntries(tree)
+
+	for b.Loop() {
+		results := tree.KeysWithPrefix("h")
 		if len(results) == 0 {
 			b.Fatal("No results")
 		}

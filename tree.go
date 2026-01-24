@@ -191,6 +191,9 @@ func (t *Tree) LongestPrefix(entry string) string {
 	}
 }
 
+// PrefixBufferSize The size of the buffer used to build the prefix of keys returned by KeysWithPrefix.
+const PrefixBufferSize = 64
+
 // KeysWithPrefix Returns a list of entry's keys in the tree that start with the given prefix.
 func (t *Tree) KeysWithPrefix(prefix string) []string {
 	if prefix == "" {
@@ -217,14 +220,14 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 			keys := make([]string, 0, edge.destination.size)
 			if edgeSuffix == "" {
 				// Exact match.
-				prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+64)
+				prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+PrefixBufferSize)
 				prefixBuffer = append(prefixBuffer, accumulatedPrefix...)
 				edge.destination.allKeys(prefixBuffer, &keys)
 				return keys
 			}
 
 			// Partial match. The entry is not a key node.
-			prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+len(edgeSuffix)+64)
+			prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+len(edgeSuffix)+PrefixBufferSize)
 			prefixBuffer = append(prefixBuffer, accumulatedPrefix...)
 			prefixBuffer = append(prefixBuffer, edgeSuffix...)
 			edge.destination.allKeys(prefixBuffer, &keys)

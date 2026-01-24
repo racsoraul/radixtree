@@ -43,13 +43,16 @@ func NewEdge(label string, dest *Node) *Edge {
 
 // allKeys Populates all keys prefixed by prefix that exist in the node into the
 // provided keys slice.
-func (n *Node) allKeys(prefix string, keys *[]string) {
+func (n *Node) allKeys(prefix []byte, keys *[]string) {
 	if n.isKey {
-		*keys = append(*keys, prefix)
+		*keys = append(*keys, string(prefix))
 	}
 
 	for _, edge := range n.children {
-		edge.destination.allKeys(prefix+edge.label, keys)
+		prevLen := len(prefix)
+		prefix = append(prefix, edge.label...)
+		edge.destination.allKeys(prefix, keys)
+		prefix = prefix[:prevLen] // Restore buffer.
 	}
 }
 

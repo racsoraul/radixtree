@@ -13,7 +13,7 @@ func New() *Tree {
 	}
 }
 
-// Size Returns the number of entries in the tree.
+// Size Returns the number of entries (key nodes) in the tree.
 func (t *Tree) Size() int {
 	return t.size
 }
@@ -215,15 +215,19 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 		if entrySuffix == "" {
 			// Allocate all keys at once.
 			keys := make([]string, 0, edge.destination.size)
-
 			if edgeSuffix == "" {
 				// Exact match.
-				edge.destination.allKeys(accumulatedPrefix, &keys)
+				prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+64)
+				prefixBuffer = append(prefixBuffer, accumulatedPrefix...)
+				edge.destination.allKeys(prefixBuffer, &keys)
 				return keys
 			}
 
 			// Partial match. The entry is not a key node.
-			edge.destination.allKeys(accumulatedPrefix+edgeSuffix, &keys)
+			prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+len(edgeSuffix)+64)
+			prefixBuffer = append(prefixBuffer, accumulatedPrefix...)
+			prefixBuffer = append(prefixBuffer, edgeSuffix...)
+			edge.destination.allKeys(prefixBuffer, &keys)
 			return keys
 		}
 

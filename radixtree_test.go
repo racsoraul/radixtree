@@ -87,38 +87,38 @@ func TestTree_Search(t *testing.T) {
 		},
 		{
 			name:          "single entry, exact match",
-			setup:         func(t *Tree) { t.Insert("hello", 50) },
+			setup:         func(t *Tree) { t.Set("hello", 50) },
 			key:           "hello",
 			expectedFound: true,
 			expectedValue: 50,
 		},
 		{
 			name:  "single entry, key is prefix of entry",
-			setup: func(t *Tree) { t.Insert("hello", 50) },
+			setup: func(t *Tree) { t.Set("hello", 50) },
 			key:   "he",
 		},
 		{
 			name:  "single entry, entry is prefix of key",
-			setup: func(t *Tree) { t.Insert("hello", 50) },
+			setup: func(t *Tree) { t.Set("hello", 50) },
 			key:   "helloworld",
 		},
 		{
 			name:          "singly entry, exact match for empty key",
-			setup:         func(t *Tree) { t.Insert("", -9) },
+			setup:         func(t *Tree) { t.Set("", -9) },
 			key:           "",
 			expectedFound: true,
 			expectedValue: -9,
 		},
 		{
 			name:  "single entry, no match for empty key",
-			setup: func(t *Tree) { t.Insert("hello", 50) },
+			setup: func(t *Tree) { t.Set("hello", 50) },
 			key:   "",
 		},
 		{
 			name: "key is prefix of entry and exact match of another one",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("he", 25)
+				t.Set("hello", 50)
+				t.Set("he", 25)
 			},
 			key:           "he",
 			expectedFound: true,
@@ -127,8 +127,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "one entry is prefix of key and key is exact match of another one",
 			setup: func(t *Tree) {
-				t.Insert("he", 25)
-				t.Insert("hello", 50)
+				t.Set("he", 25)
+				t.Set("hello", 50)
 			},
 			key:           "hello",
 			expectedFound: true,
@@ -137,8 +137,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "search entry in tree with common prefix",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("hella", 51)
+				t.Set("hello", 50)
+				t.Set("hella", 51)
 			},
 			key:           "hello",
 			expectedFound: true,
@@ -147,8 +147,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "search entry in tree with common prefix",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("hella", 51)
+				t.Set("hello", 50)
+				t.Set("hella", 51)
 			},
 			key:           "hella",
 			expectedFound: true,
@@ -157,16 +157,16 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "search entry in tree with common prefix, no match",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("hella", 51)
+				t.Set("hello", 50)
+				t.Set("hella", 51)
 			},
 			key: "hellb",
 		},
 		{
 			name: "exact match update",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("hello", 500)
+				t.Set("hello", 50)
+				t.Set("hello", 500)
 			},
 			key:           "hello",
 			expectedFound: true,
@@ -175,8 +175,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "exact match, no common prefix",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("world", 75)
+				t.Set("hello", 50)
+				t.Set("world", 75)
 			},
 			key:           "hello",
 			expectedFound: true,
@@ -185,8 +185,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "exact match, no common prefix",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("world", 75)
+				t.Set("hello", 50)
+				t.Set("world", 75)
 			},
 			key:           "world",
 			expectedFound: true,
@@ -195,8 +195,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "no match",
 			setup: func(t *Tree) {
-				t.Insert("hello", 50)
-				t.Insert("world", 75)
+				t.Set("hello", 50)
+				t.Set("world", 75)
 			},
 			key: "something",
 		},
@@ -255,9 +255,9 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "single character match",
 			setup: func(t *Tree) {
-				t.Insert("a", 1)
-				t.Insert("b", 2)
-				t.Insert("c", 3)
+				t.Set("a", 1)
+				t.Set("b", 2)
+				t.Set("c", 3)
 			},
 			key:           "b",
 			expectedFound: true,
@@ -266,8 +266,8 @@ func TestTree_Search(t *testing.T) {
 		{
 			name: "long entry match",
 			setup: func(t *Tree) {
-				t.Insert("/", 1)
-				t.Insert("/awesomedomain/api/v1/usermanagement/update", 10000000)
+				t.Set("/", 1)
+				t.Set("/awesomedomain/api/v1/usermanagement/update", 10000000)
 			},
 			key:           "/awesomedomain/api/v1/usermanagement/update",
 			expectedFound: true,
@@ -279,7 +279,7 @@ func TestTree_Search(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := New()
 			tc.setup(tree)
-			value, found := tree.Search(tc.key)
+			value, found := tree.Get(tc.key)
 			if found != tc.expectedFound {
 				t.Fatalf("want found=%v for key %q, got found=%v", tc.expectedFound, tc.key, found)
 			}
@@ -305,7 +305,7 @@ func TestTree_SearchFromFile(t *testing.T) {
 	scanner := bufio.NewScanner(words)
 	for scanner.Scan() {
 		word := scanner.Text()
-		_, found := tree.Search(word)
+		_, found := tree.Get(word)
 		if !found {
 			t.Fatalf("No match for word %q", word)
 		}
@@ -326,18 +326,18 @@ func TestTree_LongestPrefix(t *testing.T) {
 		},
 		{
 			name:  "single entry, prefix of entry",
-			setup: func(t *Tree) { t.Insert("hello", 50) },
+			setup: func(t *Tree) { t.Set("hello", 50) },
 			key:   "he",
 		},
 		{
 			name:           "single entry, entry is prefix of key",
-			setup:          func(t *Tree) { t.Insert("hello", 50) },
+			setup:          func(t *Tree) { t.Set("hello", 50) },
 			key:            "hellothere",
 			expectedPrefix: "hello",
 		},
 		{
 			name:           "single entry, key is exact match of entry",
-			setup:          func(t *Tree) { t.Insert("hello", 50) },
+			setup:          func(t *Tree) { t.Set("hello", 50) },
 			key:            "hello",
 			expectedPrefix: "hello",
 		},
@@ -374,37 +374,37 @@ func TestTree_LongestPrefix(t *testing.T) {
 }
 
 func setupDeepTree(t *Tree) {
-	t.Insert("a", 1)
-	t.Insert("ab", 12)
-	t.Insert("abc", 123)
-	t.Insert("abcd", 1234)
+	t.Set("a", 1)
+	t.Set("ab", 12)
+	t.Set("abc", 123)
+	t.Set("abcd", 1234)
 }
 
 func setupMultipleEntries(t *Tree) {
-	t.Insert("he", 25)
-	t.Insert("hello", 50)
-	t.Insert("hella", 51)
-	t.Insert("height", 60)
-	t.Insert("ant", 20)
-	t.Insert("anagram", 40)
-	t.Insert("car", 30)
-	t.Insert("crazy", 70)
-	t.Insert("crash", 72)
-	t.Insert("antihero", 100)
-	t.Insert("antecede", 101)
-	t.Insert("antagony", 102)
+	t.Set("he", 25)
+	t.Set("hello", 50)
+	t.Set("hella", 51)
+	t.Set("height", 60)
+	t.Set("ant", 20)
+	t.Set("anagram", 40)
+	t.Set("car", 30)
+	t.Set("crazy", 70)
+	t.Set("crash", 72)
+	t.Set("antihero", 100)
+	t.Set("antecede", 101)
+	t.Set("antagony", 102)
 }
 
 // BenchmarkTree_Insert Measures the performance of the Insert method.
 func BenchmarkTree_Insert(b *testing.B) {
 	tree := New()
 	for i := 0; i < 10_000; i++ {
-		tree.Insert(fmt.Sprintf("%d", i), i)
+		tree.Set(fmt.Sprintf("%d", i), i)
 	}
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		tree.Insert(strconv.Itoa(n), n)
+		tree.Set(strconv.Itoa(n), n)
 	}
 }
 
@@ -415,10 +415,10 @@ func BenchmarkTree_SearchBig(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	b.Logf("Loaded tree with %d entries", tree.Size())
+	b.Logf("Loaded tree with %d entries", tree.Len())
 
 	for b.Loop() {
-		_, found := tree.Search("hoar")
+		_, found := tree.Get("hoar")
 		if !found {
 			b.Fatal("No match")
 		}
@@ -431,7 +431,7 @@ func BenchmarkTree_SearchSmall(b *testing.B) {
 	setupMultipleEntries(tree)
 
 	for b.Loop() {
-		_, found := tree.Search("height")
+		_, found := tree.Get("height")
 		if !found {
 			b.Fatal("No match")
 		}
@@ -445,7 +445,7 @@ func BenchmarkTree_KeysWithPrefixBig(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	b.Logf("Loaded tree with %d entries", tree.Size())
+	b.Logf("Loaded tree with %d entries", tree.Len())
 
 	for b.Loop() {
 		results := tree.KeysWithPrefix("a")
@@ -481,7 +481,7 @@ func createTreeWithWordsFile() (*Tree, error) {
 	wordCounter := 1
 	for scanner.Scan() {
 		word := scanner.Text()
-		tree.Insert(word, wordCounter)
+		tree.Set(word, wordCounter)
 		wordCounter++
 	}
 	return tree, scanner.Err()

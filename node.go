@@ -6,36 +6,36 @@ import (
 	"strings"
 )
 
-// Edge Connects nodes.
-type Edge struct {
-	destination *Node
+// edge Connects nodes.
+type edge struct {
+	destination *node
 	label       string
 }
 
-// NewEdge Creates a new Edge.
-func NewEdge(label string, dest *Node) Edge {
-	return Edge{
+// newEdge Creates a new Edge.
+func newEdge(label string, dest *node) edge {
+	return edge{
 		destination: dest,
 		label:       label,
 	}
 }
 
-// Node Represents a node in the Radix Tree.
-type Node struct {
-	children []Edge
+// node Represents a node in the Radix Tree.
+type node struct {
+	children []edge
 	isKey    bool
 	size     int // Number of keys in this subtree (including this node if isKey).
 	data     any
 }
 
-// NewNode Creates a new Node.
-func NewNode(isKey bool, data any) *Node {
+// newNode Creates a new node.
+func newNode(isKey bool, data any) *node {
 	size := 0
 	if isKey {
 		size = 1
 	}
-	return &Node{
-		children: make([]Edge, 0),
+	return &node{
+		children: make([]edge, 0),
 		isKey:    isKey,
 		size:     size,
 		data:     data,
@@ -44,47 +44,47 @@ func NewNode(isKey bool, data any) *Node {
 
 // allKeys Populates all keys prefixed by prefix that exist in the node into the
 // provided keys slice.
-func (n *Node) allKeys(prefix []byte, keys *[]string) {
+func (n *node) allKeys(prefix []byte, keys *[]string) {
 	if n.isKey {
 		*keys = append(*keys, string(prefix))
 	}
 
-	for _, edge := range n.children {
+	for _, child := range n.children {
 		prevLen := len(prefix)
-		prefix = append(prefix, edge.label...)
-		edge.destination.allKeys(prefix, keys)
+		prefix = append(prefix, child.label...)
+		child.destination.allKeys(prefix, keys)
 		prefix = prefix[:prevLen] // Restore buffer.
 	}
 }
 
 // addEdge Adds an edge to the subtree.
-func (n *Node) addEdge(edge Edge) {
+func (n *node) addEdge(e edge) {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
-		return n.children[i].label[0] >= edge.label[0]
+		return n.children[i].label[0] >= e.label[0]
 	})
 
-	n.children = append(n.children, Edge{})
+	n.children = append(n.children, edge{})
 	copy(n.children[index+1:], n.children[index:])
-	n.children[index] = edge
+	n.children[index] = e
 }
 
 // updateEdge Updates an existing edge in the subtree.
-func (n *Node) updateEdge(edge Edge) {
+func (n *node) updateEdge(e edge) {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
-		return n.children[i].label[0] >= edge.label[0]
+		return n.children[i].label[0] >= e.label[0]
 	})
-	if index < num && n.children[index].label[0] == edge.label[0] {
-		n.children[index] = edge
+	if index < num && n.children[index].label[0] == e.label[0] {
+		n.children[index] = e
 		return
 	}
-	panic(edge.label + ": edge not found")
+	panic(e.label + ": edge not found")
 }
 
 // matchEdge Returns the edge that matches the first character of the entry, if any,
 // the longest common prefix of entry and edge label, and the suffixes of entry and edge label.
-func (n *Node) matchEdge(entry string) (matchedEdge Edge, commonPrefix, entrySuffix, edgeSuffix string) {
+func (n *node) matchEdge(entry string) (matchedEdge edge, commonPrefix, entrySuffix, edgeSuffix string) {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
 		return n.children[i].label[0] >= entry[0]
@@ -95,7 +95,7 @@ func (n *Node) matchEdge(entry string) (matchedEdge Edge, commonPrefix, entrySuf
 		return n.children[index], commonPrefix, entrySuffix, edgeSuffix
 	}
 
-	return Edge{}, "", entry, ""
+	return edge{}, "", entry, ""
 }
 
 // longestCommonPrefix Returns the longest common prefix between entry and label.
@@ -112,9 +112,9 @@ func longestCommonPrefix(entry, label string) (prefix, entrySuffix, edgeSuffix s
 	return entry[:minLen], entry[minLen:], label[minLen:]
 }
 
-// String Returns a string representation of the Node. It colors in
+// String Returns a string representation of the node. It colors in
 // yellow the key nodes.
-func (n *Node) String() string {
+func (n *node) String() string {
 	if n == nil {
 		return ""
 	}
@@ -122,7 +122,7 @@ func (n *Node) String() string {
 }
 
 // string Returns a string representation of the node.
-func (n *Node) string(spacing int) string {
+func (n *node) string(spacing int) string {
 	var sb strings.Builder
 	var indent string
 	if spacing > 0 {
@@ -130,14 +130,14 @@ func (n *Node) string(spacing int) string {
 		indent += "|__"
 	}
 
-	for _, edge := range n.children {
-		nextIndent := len(indent) + len(edge.label)
-		label := edge.label
-		if edge.destination.isKey {
+	for _, child := range n.children {
+		nextIndent := len(indent) + len(child.label)
+		label := child.label
+		if child.destination.isKey {
 			label = "\x1b[33m" + label + "\x1b[0m"
 		}
-		sb.WriteString(indent + label + fmt.Sprintf("(%d)", edge.destination.size) + "\n")
-		sb.WriteString(edge.destination.string(nextIndent))
+		sb.WriteString(indent + label + fmt.Sprintf("(%d)", child.destination.size) + "\n")
+		sb.WriteString(child.destination.string(nextIndent))
 	}
 	return sb.String()
 }

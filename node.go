@@ -2,12 +2,27 @@ package radixtree
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
+// Edge Connects nodes.
+type Edge struct {
+	destination *Node
+	label       string
+}
+
+// NewEdge Creates a new Edge.
+func NewEdge(label string, dest *Node) Edge {
+	return Edge{
+		destination: dest,
+		label:       label,
+	}
+}
+
 // Node Represents a node in the Radix Tree.
 type Node struct {
-	children map[byte]*Edge
+	children []Edge
 	isKey    bool
 	size     int // Number of keys in this subtree (including this node if isKey).
 	data     any
@@ -20,24 +35,10 @@ func NewNode(isKey bool, data any) *Node {
 		size = 1
 	}
 	return &Node{
-		children: make(map[byte]*Edge),
+		children: make([]Edge, 0),
 		isKey:    isKey,
 		size:     size,
 		data:     data,
-	}
-}
-
-// Edge Connects nodes.
-type Edge struct {
-	destination *Node
-	label       string
-}
-
-// NewEdge Creates a new Edge.
-func NewEdge(label string, dest *Node) *Edge {
-	return &Edge{
-		destination: dest,
-		label:       label,
 	}
 }
 
@@ -56,16 +57,45 @@ func (n *Node) allKeys(prefix []byte, keys *[]string) {
 	}
 }
 
+// addEdge Adds an edge to the subtree.
+func (n *Node) addEdge(edge Edge) {
+	num := len(n.children)
+	index := sort.Search(num, func(i int) bool {
+		return n.children[i].label[0] >= edge.label[0]
+	})
+
+	n.children = append(n.children, Edge{})
+	copy(n.children[index+1:], n.children[index:])
+	n.children[index] = edge
+}
+
+// updateEdge Updates an existing edge in the subtree.
+func (n *Node) updateEdge(edge Edge) {
+	num := len(n.children)
+	index := sort.Search(num, func(i int) bool {
+		return n.children[i].label[0] >= edge.label[0]
+	})
+	if index < num && n.children[index].label[0] == edge.label[0] {
+		n.children[index] = edge
+		return
+	}
+	panic(edge.label + ": edge not found")
+}
+
 // matchEdge Returns the edge that matches the first character of the entry, if any,
 // the longest common prefix of entry and edge label, and the suffixes of entry and edge label.
-func (n *Node) matchEdge(entry string) (matchedEdge *Edge, commonPrefix, entrySuffix, edgeSuffix string) {
-	edge, ok := n.children[entry[0]]
-	if !ok {
-		return nil, "", entry, ""
+func (n *Node) matchEdge(entry string) (matchedEdge Edge, commonPrefix, entrySuffix, edgeSuffix string) {
+	num := len(n.children)
+	index := sort.Search(num, func(i int) bool {
+		return n.children[i].label[0] >= entry[0]
+	})
+
+	if index < num && n.children[index].label[0] == entry[0] {
+		commonPrefix, entrySuffix, edgeSuffix = longestCommonPrefix(entry, n.children[index].label)
+		return n.children[index], commonPrefix, entrySuffix, edgeSuffix
 	}
 
-	commonPrefix, entrySuffix, edgeSuffix = longestCommonPrefix(entry, edge.label)
-	return edge, commonPrefix, entrySuffix, edgeSuffix
+	return Edge{}, "", entry, ""
 }
 
 // longestCommonPrefix Returns the longest common prefix between entry and label.

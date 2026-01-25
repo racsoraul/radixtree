@@ -44,9 +44,9 @@ func (t *Tree) Insert(entry string, data any) {
 	for {
 		path = append(path, currentNode) // Keep track of the path to update the sizes.
 		edge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
-		if edge == nil {
+		if edge.destination == nil {
 			// No edge found. Create a new one.
-			currentNode.children[entry[0]] = NewEdge(entry, NewNode(true, data))
+			currentNode.addEdge(NewEdge(entry, NewNode(true, data)))
 			t.size++
 			// Update sizes for all nodes in the path.
 			for _, node := range path {
@@ -72,9 +72,9 @@ func (t *Tree) Insert(entry string, data any) {
 		if entrySuffix == "" {
 			// The entry is a prefix of the label. New node before child.
 			entryEdge := NewEdge(prefix, NewNode(true, data))
-			currentNode.children[prefix[0]] = entryEdge
+			currentNode.updateEdge(entryEdge)
 			edge.label = edgeSuffix
-			entryEdge.destination.children[edgeSuffix[0]] = edge
+			entryEdge.destination.addEdge(edge)
 			t.size++
 
 			// It gets the old subtree size plus itself (1).
@@ -96,11 +96,11 @@ func (t *Tree) Insert(entry string, data any) {
 
 		// There's a common prefix. We need to split the edge.
 		bridge := NewEdge(prefix, NewNode(false, nil))
-		currentNode.children[prefix[0]] = bridge
+		currentNode.updateEdge(bridge)
 		edge.label = edgeSuffix
-		bridge.destination.children[edgeSuffix[0]] = edge
+		bridge.destination.addEdge(edge)
 		newEntryNode := NewEdge(entrySuffix, NewNode(true, data))
-		bridge.destination.children[entrySuffix[0]] = newEntryNode
+		bridge.destination.addEdge(newEntryNode)
 		t.size++
 
 		// Existing subtree size plus the new one (1).
@@ -124,7 +124,7 @@ func (t *Tree) Search(entry string) (any, bool) {
 
 	for {
 		edge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
-		if edge == nil {
+		if edge.destination == nil {
 			return nil, false
 		}
 
@@ -166,7 +166,7 @@ func (t *Tree) LongestPrefix(entry string) string {
 
 	for {
 		edge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
-		if edge == nil {
+		if edge.destination == nil {
 			return longestPrefix
 		}
 
@@ -201,11 +201,12 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 	}
 
 	currentNode := t.root
-	accumulatedPrefix := prefix
+	accumulatedPrefix := make([]byte, 0, len(prefix)+PrefixBufferSize)
+	accumulatedPrefix = append(accumulatedPrefix, prefix...)
 
 	for {
 		edge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(prefix)
-		if edge == nil {
+		if edge.destination == nil {
 			// No match.
 			return nil
 		}
@@ -220,23 +221,19 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 			keys := make([]string, 0, edge.destination.size)
 			if edgeSuffix == "" {
 				// Exact match.
-				prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+PrefixBufferSize)
-				prefixBuffer = append(prefixBuffer, accumulatedPrefix...)
-				edge.destination.allKeys(prefixBuffer, &keys)
+				edge.destination.allKeys(accumulatedPrefix, &keys)
 				return keys
 			}
 
 			// Partial match. The entry is not a key node.
-			prefixBuffer := make([]byte, 0, len(accumulatedPrefix)+len(edgeSuffix)+PrefixBufferSize)
-			prefixBuffer = append(prefixBuffer, accumulatedPrefix...)
-			prefixBuffer = append(prefixBuffer, edgeSuffix...)
-			edge.destination.allKeys(prefixBuffer, &keys)
+			accumulatedPrefix = append(accumulatedPrefix, edgeSuffix...)
+			edge.destination.allKeys(accumulatedPrefix, &keys)
 			return keys
 		}
 
 		// Move to the next child node.
 		currentNode = edge.destination
 		prefix = entrySuffix
-		accumulatedPrefix += edgeSuffix
+		accumulatedPrefix = append(accumulatedPrefix, prefix...)
 	}
 }

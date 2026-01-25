@@ -290,6 +290,28 @@ func TestTree_Search(t *testing.T) {
 	}
 }
 
+func TestTree_SearchFromFile(t *testing.T) {
+	tree, err := createTreeWithWordsFile()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	words, err := os.Open("./testdata/words_alpha.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer words.Close()
+
+	scanner := bufio.NewScanner(words)
+	for scanner.Scan() {
+		word := scanner.Text()
+		_, found := tree.Search(word)
+		if !found {
+			t.Fatalf("No match for word %q", word)
+		}
+	}
+}
+
 func TestTree_LongestPrefix(t *testing.T) {
 	testCases := []struct {
 		name           string

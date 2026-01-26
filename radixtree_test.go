@@ -401,7 +401,7 @@ func TestTree_KeysWithPrefix(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.prefix, func(t *testing.T) {
-			results := tree.KeysWithPrefix(tc.prefix)
+			results := tree.KeysWithPrefix(tc.prefix, -1)
 			if len(results) != len(tc.expectedResult) {
 				t.Fatalf("want %d results, got %d", len(tc.expectedResult), len(results))
 			}
@@ -437,10 +437,10 @@ func setupMultipleEntries(t *Tree) {
 	t.Set("antagony", 102)
 }
 
-// BenchmarkTree_Insert Measures the performance of the Insert method.
-func BenchmarkTree_Insert(b *testing.B) {
+// BenchmarkTree_Set Measures the performance of the Set method.
+func BenchmarkTree_Set(b *testing.B) {
 	tree := New()
-	for i := 0; i < 10_000; i++ {
+	for i := range 10_000 {
 		tree.Set(fmt.Sprintf("%d", i), i)
 	}
 
@@ -450,8 +450,8 @@ func BenchmarkTree_Insert(b *testing.B) {
 	}
 }
 
-// BenchmarkTree_SearchSmall Measures the performance of the Search method for a small tree.
-func BenchmarkTree_SearchSmall(b *testing.B) {
+// BenchmarkTree_GetSmall Measures the performance of the Get method for a small tree.
+func BenchmarkTree_GetSmall(b *testing.B) {
 	tree := New()
 	setupMultipleEntries(tree)
 
@@ -463,9 +463,9 @@ func BenchmarkTree_SearchSmall(b *testing.B) {
 	}
 }
 
-// BenchmarkTree_SearchBig Measures the performance of the Search method for a tree
+// BenchmarkTree_GetBig Measures the performance of the Get method for a tree
 // with more than ~370K entries in it.
-func BenchmarkTree_SearchBig(b *testing.B) {
+func BenchmarkTree_GetBig(b *testing.B) {
 	tree, err := createTreeWithWordsFile()
 	if err != nil {
 		b.Fatal(err)
@@ -487,8 +487,25 @@ func BenchmarkTree_KeysWithPrefixSmall(b *testing.B) {
 	setupMultipleEntries(tree)
 
 	for b.Loop() {
-		results := tree.KeysWithPrefix("h")
+		results := tree.KeysWithPrefix("h", -1)
 		if len(results) != 4 {
+			b.Fatalf("wrong number of results: %d", len(results))
+		}
+	}
+}
+
+// BenchmarkTree_KeysWithPrefixMedium Measures the performance of the KeysWithPrefix method by retrieving
+// keys starting with the prefix "a", with a limit of 12,500.
+func BenchmarkTree_KeysWithPrefixMedium(b *testing.B) {
+	tree, err := createTreeWithWordsFile()
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Logf("Loaded tree with %d entries", tree.Len())
+
+	for b.Loop() {
+		results := tree.KeysWithPrefix("a", 12_500)
+		if len(results) != 12_500 {
 			b.Fatalf("wrong number of results: %d", len(results))
 		}
 	}
@@ -504,7 +521,7 @@ func BenchmarkTree_KeysWithPrefixBig(b *testing.B) {
 	b.Logf("Loaded tree with %d entries", tree.Len())
 
 	for b.Loop() {
-		results := tree.KeysWithPrefix("a")
+		results := tree.KeysWithPrefix("a", -1)
 		if len(results) != 25_417 {
 			b.Fatalf("wrong number of results: %d", len(results))
 		}

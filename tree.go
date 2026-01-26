@@ -1,3 +1,6 @@
+// Package radixtree A fast, efficient Radix Tree implementation in Go.
+// Provides a lexicographically ordered iteration and multiple lookup methods.
+// It leverages Go iterators for a more natural API.
 package radixtree
 
 import "iter"
@@ -32,6 +35,7 @@ func (t *Tree) String() string {
 }
 
 // All Returns an iterator over all entries in the tree.
+// It provides a lexicographically ordered iteration.
 func (t *Tree) All() iter.Seq2[string, any] {
 	return func(yield func(string, any) bool) {
 		accumulatedLabel := make([]byte, 0, labelBufferSize)
@@ -164,8 +168,7 @@ func (t *Tree) Get(entry string) (any, bool) {
 // Delete Removes an entry from the tree. Returns true indicating
 // if the entry existed and was deleted, false otherwise.
 func (t *Tree) Delete(entry string) bool {
-	// TODO: Implement.
-	return false
+	panic("not implemented yet. Sorry!")
 }
 
 // LongestPrefix Returns the longest prefix of the entry that is also a key node in the tree.
@@ -205,7 +208,9 @@ func (t *Tree) LongestPrefix(entry string) string {
 }
 
 // KeysWithPrefix Returns a list of entry's keys in the tree that start with the given prefix.
-func (t *Tree) KeysWithPrefix(prefix string) []string {
+// The limit parameter controls the maximum number of keys to return. If the value of limit is -1,
+// all keys are returned.
+func (t *Tree) KeysWithPrefix(prefix string, limit int) []string {
 	if prefix == "" {
 		return nil
 	}
@@ -230,8 +235,12 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 
 		if entrySuffix == "" {
 			// Either an exact match or partial match.
-			keys := make([]string, 0, matchedEdge.destination.size)
-			matchedEdge.destination.allKeys(accumulatedPrefix, &keys)
+			allocSize := matchedEdge.destination.size
+			if limit > 0 && allocSize > limit {
+				allocSize = limit
+			}
+			keys := make([]string, 0, allocSize)
+			matchedEdge.destination.allKeys(accumulatedPrefix, &keys, limit)
 			return keys
 		}
 

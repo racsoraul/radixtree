@@ -64,15 +64,18 @@ func (n *node) push(label []byte, yield func(string, any) bool) bool {
 
 // allKeys Populates all keys prefixed by prefix that exist in the node into the
 // provided keys slice.
-func (n *node) allKeys(prefix []byte, keys *[]string) {
+func (n *node) allKeys(prefix []byte, keys *[]string, limit int) {
 	if n.isKey {
+		if limit > 0 && len(*keys) >= limit {
+			return
+		}
 		*keys = append(*keys, string(prefix))
 	}
 
 	for _, child := range n.children {
 		prevLen := len(prefix)
 		prefix = append(prefix, child.label...)
-		child.destination.allKeys(prefix, keys)
+		child.destination.allKeys(prefix, keys, limit)
 		prefix = prefix[:prevLen] // Restore buffer.
 	}
 }

@@ -69,7 +69,7 @@ func main() {
 	fmt.Println(t.LongestPrefix("antagonist")) // Output: ant
 
 	// Keys with prefix (autocompletion).
-	fmt.Println(t.KeysWithPrefix("ant", 5)) // Output: [ant antares antihero]
+	fmt.Println(t.KeysWithPrefix("an", 5)) // Output: [anagram ant antares antihero]
 }
 ```
 
@@ -79,7 +79,7 @@ The `All()` method returns a Go iterator, allowing you to use `for ... range` lo
 
 ```go
 for key, value := range tree.All() {
-	fmt.Printf("%s: %v\n", key, value)
+fmt.Printf("%s: %v\n", key, value)
 }
 // Output:
 // anagram: 40
@@ -98,8 +98,8 @@ Find the longest prefix of a given string that exists as a key in the tree.
 ```go
 // Returns "ant" if we look for "antagonist".
 prefix := tree.LongestPrefix("antagonist")
-fmt.Printf("Longest prefix: %s\n", prefix)
-// Output: Longest prefix: ant
+fmt.Println(prefix)
+// Output: ant
 ```
 
 ### Prefix Search
@@ -108,10 +108,10 @@ Get all keys that start with a specific prefix. The `limit` parameter controls t
 `-1` for no limit.
 
 ```go
-// Get up to 10 keys with prefix "ant".
+// Get up to (autocomplete) 10 keys with prefix "ant".
 keys := tree.KeysWithPrefix("ant", 10)
 fmt.Println("Keys with prefix 'ant':", keys)
-// Output: Keys with prefix 'ant': [ant antares antihero]
+// Output: Keys with prefix 'ant': [anagram ant antares antihero]
 ```
 
 ### Visualization
@@ -164,11 +164,11 @@ Measures the performance of finding all keys that share a common prefix.
 - **Medium**: Searches for "a" in the Big Tree (370,105 words), limited to 12,500 results.
 - **Big**: Searches for "a" in the Big Tree, returns all 25,417 matches.
 
-| Benchmark                                 | Operations | Speed           | Memory       | Allocs           |
-|:------------------------------------------|:-----------|:----------------|:-------------|:-----------------|
-| `KeysWithPrefix` (Small: 4 results)       | 9,890,601  | 121.6 ns/op     | 165 B/op     | 6 allocs/op      |
-| `KeysWithPrefix` (Medium: 12,500 results) | 2,751      | 420,147 ns/op   | 354,704 B/op | 12,501 allocs/op |
-| `KeysWithPrefix` (Big: 25,417 results)    | 1,297      | 899,874 ns/op   | 724,944 B/op | 25,418 allocs/op |
+| Benchmark                                 | Operations | Speed         | Memory       | Allocs           |
+|:------------------------------------------|:-----------|:--------------|:-------------|:-----------------|
+| `KeysWithPrefix` (Small: 4 results)       | 9,890,601  | 121.6 ns/op   | 165 B/op     | 6 allocs/op      |
+| `KeysWithPrefix` (Medium: 12,500 results) | 2,751      | 420,147 ns/op | 354,704 B/op | 12,501 allocs/op |
+| `KeysWithPrefix` (Big: 25,417 results)    | 1,297      | 899,874 ns/op | 724,944 B/op | 25,418 allocs/op |
 
 ### Iteration (All)
 

@@ -11,6 +11,7 @@ methods. It leverages Go iterators for a more natural API.
 - **Iterators**: Walk the tree using the `for-range` loop.
 - **Multiple Lookup Methods**: Supports exact match, longest prefix match, and prefix-based discovery.
 - **High Performance**: Optimized for speed and low memory overhead.
+- **Generics**: Tree uses generics, so can store any data without losing type-safety.
 - **Zero-Allocations**: No allocations during `Get` operations.
 
 > 🚧 This project is still a WIP.
@@ -120,7 +121,7 @@ and then performs repeated insertions.
 
 | Benchmark           | Operations | Speed       | Memory   | Allocs      |
 |:--------------------|:-----------|:------------|:---------|:------------|
-| `BenchmarkTree_Set` | 4,792,552  | 257.9 ns/op | 265 B/op | 6 allocs/op |
+| `BenchmarkTree_Set` | 5,201,592  | 232.9 ns/op | 241 B/op | 5 allocs/op |
 
 ### Lookup (Get)
 
@@ -129,8 +130,8 @@ key "hoar" in a tree containing 370,105 words.
 
 | Benchmark          | Operations | Speed       | Memory | Allocs      |
 |:-------------------|:-----------|:------------|:-------|:------------|
-| `Get` (Small Tree) | 76,879,131 | 15.72 ns/op | 0 B/op | 0 allocs/op |
-| `Get` (Big Tree)   | 32,649,506 | 36.71 ns/op | 0 B/op | 0 allocs/op |
+| `Get` (Small Tree) | 78,383,768 | 15.32 ns/op | 0 B/op | 0 allocs/op |
+| `Get` (Big Tree)   | 32,526,567 | 36.76 ns/op | 0 B/op | 0 allocs/op |
 
 ### Prefix Search (KeysWithPrefix)
 
@@ -142,9 +143,9 @@ Measures the performance of finding all keys that share a common prefix.
 
 | Benchmark                                 | Operations | Speed           | Memory       | Allocs           |
 |:------------------------------------------|:-----------|:----------------|:-------------|:-----------------|
-| `KeysWithPrefix` (Small: 4 results)       | 9,595,393  | 123.4 ns/op     | 165 B/op     | 6 allocs/op      |
-| `KeysWithPrefix` (Medium: 12,500 results) | 2,731      | 420,645 ns/op   | 354,704 B/op | 12,501 allocs/op |
-| `KeysWithPrefix` (Big: 25,417 results)    | 1,297      | 886,652 ns/op   | 724,944 B/op | 25,418 allocs/op |
+| `KeysWithPrefix` (Small: 4 results)       | 9,890,601  | 121.6 ns/op     | 165 B/op     | 6 allocs/op      |
+| `KeysWithPrefix` (Medium: 12,500 results) | 2,751      | 420,147 ns/op   | 354,704 B/op | 12,501 allocs/op |
+| `KeysWithPrefix` (Big: 25,417 results)    | 1,297      | 899,874 ns/op   | 724,944 B/op | 25,418 allocs/op |
 
 ### Iteration (All)
 
@@ -152,6 +153,6 @@ Measures the performance of iterating over the tree's entries using Go iterators
 
 | Benchmark                      | Operations | Speed            | Memory         | Allocs            |
 |:-------------------------------|:-----------|:-----------------|:---------------|:------------------|
-| `All` (Small: ~15 entries)     | 4,433,186  | 270.4 ns/op      | 136 B/op       | 15 allocs/op      |
-| `All` (Medium: 10,000 entries) | 3,634      | 310,962 ns/op    | 117,968 B/op   | 10,002 allocs/op  |
-| `All` (Big: 370,105 entries)   | 78         | 14,367,569 ns/op | 4,582,426 B/op | 370,082 allocs/op |
+| `All` (Small: ~15 entries)     | 4,433,824  | 271.5 ns/op      | 144 B/op       | 15 allocs/op      |
+| `All` (Medium: 10,000 entries) | 3,798      | 313,525 ns/op    | 117,976 B/op   | 10,002 allocs/op  |
+| `All` (Big: 370,105 entries)   | 92         | 13,233,376 ns/op | 4,582,438 B/op | 370,082 allocs/op |

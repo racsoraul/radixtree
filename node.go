@@ -42,6 +42,26 @@ func newNode(isKey bool, data any) *node {
 	}
 }
 
+// push Pushes all entries to the yield function.
+func (n *node) push(label []byte, yield func(string, any) bool) bool {
+	if n.isKey {
+		if !yield(string(label), n.data) {
+			return false
+		}
+	}
+
+	for _, child := range n.children {
+		prevLen := len(label)
+		label = append(label, child.label...)
+		if !child.destination.push(label, yield) {
+			return false
+		}
+		label = label[:prevLen] // Restore buffer.
+	}
+
+	return true
+}
+
 // allKeys Populates all keys prefixed by prefix that exist in the node into the
 // provided keys slice.
 func (n *node) allKeys(prefix []byte, keys *[]string) {

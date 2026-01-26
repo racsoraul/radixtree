@@ -1,5 +1,10 @@
 package radixtree
 
+import "iter"
+
+// labelBufferSize The size of a reusable buffer used to build complete labels.
+const labelBufferSize = 64
+
 // Tree Represents a Radix Tree. Operations are not concurrency safe.
 type Tree struct {
 	root *node
@@ -24,6 +29,14 @@ func (t *Tree) String() string {
 		return ""
 	}
 	return t.root.string(0)
+}
+
+// All Returns an iterator over all entries in the tree.
+func (t *Tree) All() iter.Seq2[string, any] {
+	return func(yield func(string, any) bool) {
+		accumulatedLabel := make([]byte, 0, labelBufferSize)
+		t.root.push(accumulatedLabel, yield)
+	}
 }
 
 // Set Adds a new entry to the tree or updates an existing one.
@@ -191,9 +204,6 @@ func (t *Tree) LongestPrefix(entry string) string {
 	}
 }
 
-// prefixBufferSize The size of the buffer used to build the prefix of keys returned by KeysWithPrefix.
-const prefixBufferSize = 64
-
 // KeysWithPrefix Returns a list of entry's keys in the tree that start with the given prefix.
 func (t *Tree) KeysWithPrefix(prefix string) []string {
 	if prefix == "" {
@@ -201,7 +211,7 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 	}
 
 	currentNode := t.root
-	accumulatedPrefix := make([]byte, 0, len(prefix)+prefixBufferSize)
+	accumulatedPrefix := make([]byte, 0, len(prefix)+labelBufferSize)
 
 	for {
 		matchedEdge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(prefix)

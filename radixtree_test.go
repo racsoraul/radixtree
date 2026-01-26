@@ -450,6 +450,19 @@ func BenchmarkTree_Insert(b *testing.B) {
 	}
 }
 
+// BenchmarkTree_SearchSmall Measures the performance of the Search method for a small tree.
+func BenchmarkTree_SearchSmall(b *testing.B) {
+	tree := New()
+	setupMultipleEntries(tree)
+
+	for b.Loop() {
+		_, found := tree.Get("height")
+		if !found {
+			b.Fatal("No match")
+		}
+	}
+}
+
 // BenchmarkTree_SearchBig Measures the performance of the Search method for a tree
 // with more than ~370K entries in it.
 func BenchmarkTree_SearchBig(b *testing.B) {
@@ -467,15 +480,16 @@ func BenchmarkTree_SearchBig(b *testing.B) {
 	}
 }
 
-// BenchmarkTree_SearchSmall Measures the performance of the Search method for a small tree.
-func BenchmarkTree_SearchSmall(b *testing.B) {
+// BenchmarkTree_KeysWithPrefixSmall Measures the performance of the KeysWithPrefix method by retrieving
+// keys starting with the prefix "h", 4 results.
+func BenchmarkTree_KeysWithPrefixSmall(b *testing.B) {
 	tree := New()
 	setupMultipleEntries(tree)
 
 	for b.Loop() {
-		_, found := tree.Get("height")
-		if !found {
-			b.Fatal("No match")
+		results := tree.KeysWithPrefix("h")
+		if len(results) != 4 {
+			b.Fatalf("wrong number of results: %d", len(results))
 		}
 	}
 }
@@ -497,16 +511,66 @@ func BenchmarkTree_KeysWithPrefixBig(b *testing.B) {
 	}
 }
 
-// BenchmarkTree_KeysWithPrefixSmall Measures the performance of the KeysWithPrefix method by retrieving
-// keys starting with the prefix "h", 4 results.
-func BenchmarkTree_KeysWithPrefixSmall(b *testing.B) {
+// BenchmarkTree_AllSmall Measures the performance of the All method by iterating over a small set of entries.
+func BenchmarkTree_AllSmall(b *testing.B) {
 	tree := New()
 	setupMultipleEntries(tree)
 
 	for b.Loop() {
-		results := tree.KeysWithPrefix("h")
-		if len(results) != 4 {
-			b.Fatalf("wrong number of results: %d", len(results))
+		count := 0
+		for k, v := range tree.All() {
+			_ = k
+			_ = v
+			count++
+		}
+		if count != tree.Len() {
+			b.Fatalf("wrong number of results: %d", count)
+		}
+	}
+}
+
+// BenchmarkTree_AllMedium Measures the performance of the All method by iterating over a big set of entries
+// but breaking the iteration after a certain number of entries (10,000).
+func BenchmarkTree_AllMedium(b *testing.B) {
+	tree, err := createTreeWithWordsFile()
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Logf("Loaded tree with %d entries", tree.Len())
+
+	for b.Loop() {
+		count := 0
+		for k, v := range tree.All() {
+			count++
+			_ = k
+			_ = v
+			if count == 10_000 {
+				break
+			}
+		}
+		if count != 10_000 {
+			b.Fatalf("wrong number of results: %d", count)
+		}
+	}
+}
+
+// BenchmarkTree_AllBig Measures the performance of the All method by iterating over a big set of entries.
+func BenchmarkTree_AllBig(b *testing.B) {
+	tree, err := createTreeWithWordsFile()
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Logf("Loaded tree with %d entries", tree.Len())
+
+	for b.Loop() {
+		count := 0
+		for k, v := range tree.All() {
+			_ = k
+			_ = v
+			count++
+		}
+		if count != tree.Len() {
+			b.Fatalf("wrong number of results: %d", count)
 		}
 	}
 }

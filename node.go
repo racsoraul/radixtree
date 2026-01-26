@@ -7,35 +7,35 @@ import (
 )
 
 // edge Connects nodes.
-type edge struct {
-	destination *node
+type edge[T any] struct {
+	destination *node[T]
 	label       string
 }
 
 // newEdge Creates a new Edge.
-func newEdge(label string, dest *node) edge {
-	return edge{
+func newEdge[T any](label string, dest *node[T]) edge[T] {
+	return edge[T]{
 		destination: dest,
 		label:       label,
 	}
 }
 
 // node Represents a node in the Radix Tree.
-type node struct {
-	children []edge
+type node[T any] struct {
+	children []edge[T]
 	isKey    bool
 	size     int // Number of keys in this subtree (including this node if isKey).
-	data     any
+	data     T
 }
 
 // newNode Creates a new node.
-func newNode(isKey bool, data any) *node {
+func newNode[T any](isKey bool, data T) *node[T] {
 	size := 0
 	if isKey {
 		size = 1
 	}
-	return &node{
-		children: make([]edge, 0),
+	return &node[T]{
+		children: make([]edge[T], 0),
 		isKey:    isKey,
 		size:     size,
 		data:     data,
@@ -43,7 +43,7 @@ func newNode(isKey bool, data any) *node {
 }
 
 // push Pushes all entries to the yield function.
-func (n *node) push(label []byte, yield func(string, any) bool) bool {
+func (n *node[T]) push(label []byte, yield func(string, T) bool) bool {
 	if n.isKey {
 		if !yield(string(label), n.data) {
 			return false
@@ -64,7 +64,7 @@ func (n *node) push(label []byte, yield func(string, any) bool) bool {
 
 // allKeys Populates all keys prefixed by prefix that exist in the node into the
 // provided keys slice.
-func (n *node) allKeys(prefix []byte, keys *[]string, limit int) {
+func (n *node[T]) allKeys(prefix []byte, keys *[]string, limit int) {
 	if n.isKey {
 		if limit > 0 && len(*keys) >= limit {
 			return
@@ -81,19 +81,19 @@ func (n *node) allKeys(prefix []byte, keys *[]string, limit int) {
 }
 
 // addEdge Adds an edge to the subtree.
-func (n *node) addEdge(e edge) {
+func (n *node[T]) addEdge(e edge[T]) {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
 		return n.children[i].label[0] >= e.label[0]
 	})
 
-	n.children = append(n.children, edge{})
+	n.children = append(n.children, edge[T]{})
 	copy(n.children[index+1:], n.children[index:])
 	n.children[index] = e
 }
 
 // updateEdge Updates an existing edge in the subtree.
-func (n *node) updateEdge(e edge) {
+func (n *node[T]) updateEdge(e edge[T]) {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
 		return n.children[i].label[0] >= e.label[0]
@@ -107,7 +107,7 @@ func (n *node) updateEdge(e edge) {
 
 // matchEdge Returns the edge that matches the first character of the entry, if any,
 // the longest common prefix of entry and edge label, and the suffixes of entry and edge label.
-func (n *node) matchEdge(entry string) (matchedEdge edge, commonPrefix, entrySuffix, edgeSuffix string) {
+func (n *node[T]) matchEdge(entry string) (matchedEdge edge[T], commonPrefix, entrySuffix, edgeSuffix string) {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
 		return n.children[i].label[0] >= entry[0]
@@ -118,7 +118,7 @@ func (n *node) matchEdge(entry string) (matchedEdge edge, commonPrefix, entrySuf
 		return n.children[index], commonPrefix, entrySuffix, edgeSuffix
 	}
 
-	return edge{}, "", entry, ""
+	return edge[T]{}, "", entry, ""
 }
 
 // longestCommonPrefix Returns the longest common prefix between entry and label.
@@ -137,7 +137,7 @@ func longestCommonPrefix(entry, label string) (prefix, entrySuffix, edgeSuffix s
 
 // String Returns a string representation of the node. It colors in
 // yellow the key nodes.
-func (n *node) String() string {
+func (n *node[T]) String() string {
 	if n == nil {
 		return ""
 	}
@@ -145,7 +145,7 @@ func (n *node) String() string {
 }
 
 // string Returns a string representation of the node.
-func (n *node) string(spacing int) string {
+func (n *node[T]) string(spacing int) string {
 	var sb strings.Builder
 	var indent string
 	if spacing > 0 {

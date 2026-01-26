@@ -13,6 +13,8 @@ methods. It leverages Go iterators for a more natural API.
 - **High Performance**: Optimized for speed and low memory overhead.
 - **Zero-Allocations**: No allocations during `Get` operations.
 
+> 🚧 This project is still a WIP.
+
 ## Installation
 
 ```bash
@@ -28,23 +30,24 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/racsoraul/radixtree"
 )
 
 func main() {
-	tree := radixtree.New()
+	tree := radixtree.New[string]()
 
 	// Insert entries
 	tree.Set("apple", "A sweet red fruit")
 	tree.Set("app", "A small application")
 	tree.Set("banana", "A long yellow fruit")
 
-	// Get an entry
+	// Get an entry.
 	if val, ok := tree.Get("apple"); ok {
 		fmt.Printf("apple: %v\n", val)
 	}
 
-	// Check tree size
+	// Check tree size.
 	fmt.Printf("Tree size: %d\n", tree.Len())
 	// Output:
 	// apple: A sweet red fruit

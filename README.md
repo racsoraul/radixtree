@@ -1,6 +1,7 @@
 # Radix Tree
 
 [![Test](https://github.com/racsoraul/radixtree/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/racsoraul/radixtree/actions/workflows/go.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/racsoraul/radixtree.svg)](https://pkg.go.dev/github.com/racsoraul/radixtree)
 
 A fast, efficient Radix Tree implementation in Go. Provides a lexicographically ordered iteration and multiple lookup
 methods. It leverages Go iterators for a more natural API when walking the tree.
@@ -22,6 +23,10 @@ methods. It leverages Go iterators for a more natural API when walking the tree.
 go get github.com/racsoraul/radixtree
 ```
 
+## API Reference
+
+The full API documentation is available on [GoDoc](https://pkg.go.dev/github.com/racsoraul/radixtree).
+
 ## Usage
 
 ### Basic Operations
@@ -36,23 +41,35 @@ import (
 )
 
 func main() {
-	tree := radixtree.New[string]()
+	// Create a tree that holds integer values (can be any type).
+	t := radixtree.New[int]()
 
-	// Insert entries
-	tree.Set("apple", "A sweet red fruit")
-	tree.Set("app", "A small application")
-	tree.Set("banana", "A long yellow fruit")
+	// Insert entries.
+	t.Set("crash", 72)
+	t.Set("ant", 20)
+	t.Set("anagram", 40)
+	t.Set("car", 30)
+	t.Set("antihero", 100)
+	t.Set("height", 11)
+	t.Set("antares", 50)
 
-	// Get an entry.
-	if val, ok := tree.Get("apple"); ok {
-		fmt.Printf("apple: %v\n", val)
+	// Tree size (number of entries).
+	fmt.Println(t.Len()) // Output: 7
+
+	// Get entries.
+	fmt.Println(t.Get("height")) // Output: 11 true
+	fmt.Println(t.Get("care"))   // Output: 0 false
+
+	// Walk the tree in lexicographical order.
+	for k, v := range t.All() {
+		fmt.Println("~>", k, v)
 	}
 
-	// Check tree size.
-	fmt.Printf("Tree size: %d\n", tree.Len())
-	// Output:
-	// apple: A sweet red fruit
-	// Tree size: 3
+	// Longest prefix with entries that key nodes.
+	fmt.Println(t.LongestPrefix("antagonist")) // Output: ant
+
+	// Keys with prefix (autocompletion).
+	fmt.Println(t.KeysWithPrefix("ant", 5)) // Output: [ant antares antihero]
 }
 ```
 
@@ -65,9 +82,13 @@ for key, value := range tree.All() {
 	fmt.Printf("%s: %v\n", key, value)
 }
 // Output:
-// app: A small application
-// apple: A sweet red fruit
-// banana: A long yellow fruit
+// anagram: 40
+// ant: 20
+// antares: 50
+// antihero: 100
+// car: 30
+// crash: 72
+// height: 11
 ```
 
 ### Longest Prefix Match
@@ -75,10 +96,10 @@ for key, value := range tree.All() {
 Find the longest prefix of a given string that exists as a key in the tree.
 
 ```go
-// Returns "app" if only "app" and "apple" are in the tree and we look for "application".
-prefix := tree.LongestPrefix("application")
+// Returns "ant" if we look for "antagonist".
+prefix := tree.LongestPrefix("antagonist")
 fmt.Printf("Longest prefix: %s\n", prefix)
-// Output: Longest prefix: app
+// Output: Longest prefix: ant
 ```
 
 ### Prefix Search
@@ -87,10 +108,10 @@ Get all keys that start with a specific prefix. The `limit` parameter controls t
 `-1` for no limit.
 
 ```go
-// Get up to 10 keys with prefix "ap".
-keys := tree.KeysWithPrefix("ap", 10)
-fmt.Println("Keys with prefix 'ap':", keys)
-// Output: Keys with prefix 'ap': [app apple]
+// Get up to 10 keys with prefix "ant".
+keys := tree.KeysWithPrefix("ant", 10)
+fmt.Println("Keys with prefix 'ant':", keys)
+// Output: Keys with prefix 'ant': [ant antares antihero]
 ```
 
 ### Visualization
@@ -100,14 +121,16 @@ The tree provides a `String()` method to visualize its internal structure. Handy
 ```go
 fmt.Println(tree)
 // Output:
-// app(2)
-//   |__le(1)
-// banana(1)
+// an(4)
+//  |__agram(1)
+//  |__t(3)
+//     |__ares(1)
+//     |__ihero(1)
+// c(2)
+// |__ar(1)
+// |__rash(1)
+// height(1)
 ```
-
-## API Reference
-
-The full API documentation is available on [GoDoc](https://pkg.go.dev/github.com/racsoraul/radixtree).
 
 ## Benchmarks
 

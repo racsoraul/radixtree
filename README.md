@@ -3,15 +3,15 @@
 [![Test](https://github.com/racsoraul/radixtree/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/racsoraul/radixtree/actions/workflows/go.yml)
 
 A fast, efficient Radix Tree implementation in Go. Provides a lexicographically ordered iteration and multiple lookup
-methods. It leverages Go iterators for a more natural API.
+methods. It leverages Go iterators for a more natural API when walking the tree.
 
 ## Features
 
 - **Lexicographically Ordered Iteration**: Iterate over all keys in the tree in their natural order.
 - **Iterators**: Walk the tree using the `for-range` loop.
-- **Multiple Lookup Methods**: Supports exact match, longest prefix match, and prefix-based discovery.
+- **Multiple Lookup Methods**: Supports exact match, longest prefix match, and prefix-based discovery (autocomplete).
 - **High Performance**: Optimized for speed and low memory overhead.
-- **Generics**: Tree uses generics, so can store any data without losing type-safety.
+- **Generics**: Store any data without losing type-safety.
 - **Zero-Allocations**: No allocations during `Get` operations.
 
 > 🚧 This project is still a WIP.

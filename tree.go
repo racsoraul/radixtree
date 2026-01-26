@@ -202,7 +202,6 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 
 	currentNode := t.root
 	accumulatedPrefix := make([]byte, 0, len(prefix)+prefixBufferSize)
-	accumulatedPrefix = append(accumulatedPrefix, prefix...)
 
 	for {
 		matchedEdge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(prefix)
@@ -212,21 +211,16 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 		}
 
 		if entrySuffix != "" && edgeSuffix != "" {
-			// Partial match.
+			// Partial match due to a common prefix.
 			return nil
 		}
 
-		if entrySuffix == "" {
-			// Allocate all keys at once.
-			keys := make([]string, 0, matchedEdge.destination.size)
-			if edgeSuffix == "" {
-				// Exact match.
-				matchedEdge.destination.allKeys(accumulatedPrefix, &keys)
-				return keys
-			}
+		// Add the matched edge label as the base prefix.
+		accumulatedPrefix = append(accumulatedPrefix, matchedEdge.label...)
 
-			// Partial match. The entry is not a key node.
-			accumulatedPrefix = append(accumulatedPrefix, edgeSuffix...)
+		if entrySuffix == "" {
+			// Either an exact match or partial match.
+			keys := make([]string, 0, matchedEdge.destination.size)
 			matchedEdge.destination.allKeys(accumulatedPrefix, &keys)
 			return keys
 		}
@@ -234,6 +228,5 @@ func (t *Tree) KeysWithPrefix(prefix string) []string {
 		// Move to the next child node.
 		currentNode = matchedEdge.destination
 		prefix = entrySuffix
-		accumulatedPrefix = append(accumulatedPrefix, prefix...)
 	}
 }

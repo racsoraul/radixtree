@@ -373,6 +373,48 @@ func TestTree_LongestPrefix(t *testing.T) {
 	}
 }
 
+func TestTree_KeysWithPrefix(t *testing.T) {
+	tree := New()
+	setupMultipleEntries(tree)
+
+	testCases := []struct {
+		prefix         string
+		expectedResult []string
+	}{
+		{
+			prefix:         "h",
+			expectedResult: []string{"he", "height", "hella", "hello"},
+		},
+		{
+			prefix:         "he",
+			expectedResult: []string{"he", "height", "hella", "hello"},
+		},
+		{
+			prefix:         "hel",
+			expectedResult: []string{"hella", "hello"},
+		},
+		{
+			prefix:         "hell",
+			expectedResult: []string{"hella", "hello"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.prefix, func(t *testing.T) {
+			results := tree.KeysWithPrefix(tc.prefix)
+			if len(results) != len(tc.expectedResult) {
+				t.Fatalf("want %d results, got %d", len(tc.expectedResult), len(results))
+			}
+			for i, result := range results {
+				if result != tc.expectedResult[i] {
+					t.Fatalf("want result %q, got %q", tc.expectedResult[i], result)
+				}
+			}
+		})
+	}
+
+}
+
 func setupDeepTree(t *Tree) {
 	t.Set("a", 1)
 	t.Set("ab", 12)
@@ -449,22 +491,22 @@ func BenchmarkTree_KeysWithPrefixBig(b *testing.B) {
 
 	for b.Loop() {
 		results := tree.KeysWithPrefix("a")
-		if len(results) == 0 {
-			b.Fatal("No results")
+		if len(results) != 25_417 {
+			b.Fatalf("wrong number of results: %d", len(results))
 		}
 	}
 }
 
 // BenchmarkTree_KeysWithPrefixSmall Measures the performance of the KeysWithPrefix method by retrieving
-// keys starting with the prefix "h", yielding 25,417 results.
+// keys starting with the prefix "h", 4 results.
 func BenchmarkTree_KeysWithPrefixSmall(b *testing.B) {
 	tree := New()
 	setupMultipleEntries(tree)
 
 	for b.Loop() {
 		results := tree.KeysWithPrefix("h")
-		if len(results) == 0 {
-			b.Fatal("No results")
+		if len(results) != 4 {
+			b.Fatalf("wrong number of results: %d", len(results))
 		}
 	}
 }

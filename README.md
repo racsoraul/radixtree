@@ -65,7 +65,7 @@ func main() {
 		fmt.Println("~>", k, v)
 	}
 
-	// Longest prefix with entries that key nodes.
+	// Longest prefix with entries that are key nodes.
 	fmt.Println(t.LongestPrefix("antagonist")) // Output: ant
 
 	// Keys with prefix (autocompletion).
@@ -73,13 +73,33 @@ func main() {
 }
 ```
 
+### Set
+
+The `Set` method inserts or updates a key-value pair in the tree.
+
+```go
+tree.Set("hello", 100)
+```
+
+### Get
+
+The `Get` method retrieves the value associated with a key. It returns the value and a boolean indicating if the
+key was found or not.
+
+```go
+if value, ok := tree.Get("hello"); ok {
+	fmt.Println(value)
+}
+```
+
 ### Iteration
 
-The `All()` method returns a Go iterator, allowing you to use `for ... range` loops.
+The `All()` method returns a Go iterator, allowing you to use `for ... range` loops. It allows you to walk the tree in
+lexicographical order.
 
 ```go
 for key, value := range tree.All() {
-fmt.Printf("%s: %v\n", key, value)
+	fmt.Printf("%s: %v\n", key, value)
 }
 // Output:
 // anagram: 40
@@ -97,21 +117,19 @@ Find the longest prefix of a given string that exists as a key in the tree.
 
 ```go
 // Returns "ant" if we look for "antagonist".
-prefix := tree.LongestPrefix("antagonist")
-fmt.Println(prefix)
+fmt.Println(tree.LongestPrefix("antagonist"))
 // Output: ant
 ```
 
-### Prefix Search
+### Keys With Prefix (Autocomplete)
 
 Get all keys that start with a specific prefix. The `limit` parameter controls the maximum number of keys to return. Use
 `-1` for no limit.
 
 ```go
 // Get up to (autocomplete) 10 keys with prefix "ant".
-keys := tree.KeysWithPrefix("ant", 10)
-fmt.Println("Keys with prefix 'ant':", keys)
-// Output: Keys with prefix 'ant': [anagram ant antares antihero]
+fmt.Println(tree.KeysWithPrefix("ant", 10))
+// Output: [anagram ant antares antihero]
 ```
 
 ### Visualization
@@ -156,7 +174,7 @@ key "hoar" in a tree containing 370,105 words.
 | `Get` (Small Tree) | 78,383,768 | 15.32 ns/op | 0 B/op | 0 allocs/op |
 | `Get` (Big Tree)   | 32,526,567 | 36.76 ns/op | 0 B/op | 0 allocs/op |
 
-### Prefix Search (KeysWithPrefix)
+### Keys With Prefix (KeysWithPrefix)
 
 Measures the performance of finding all keys that share a common prefix.
 

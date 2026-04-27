@@ -93,16 +93,16 @@ func (n *node[T]) addEdge(e edge[T]) {
 }
 
 // updateEdge Updates an existing edge in the subtree.
-func (n *node[T]) updateEdge(e edge[T]) {
+func (n *node[T]) updateEdge(e edge[T]) error {
 	num := len(n.children)
 	index := sort.Search(num, func(i int) bool {
 		return n.children[i].label[0] >= e.label[0]
 	})
 	if index < num && n.children[index].label[0] == e.label[0] {
 		n.children[index] = e
-		return
+		return nil
 	}
-	panic(e.label + ": edge not found")
+	return fmt.Errorf("%s: edge not found", e.label)
 }
 
 // matchEdge Returns the edge that matches the first character of the entry, if any,

@@ -45,7 +45,7 @@ func (t *Tree[T]) All() iter.Seq2[string, T] {
 }
 
 // Set Adds a new entry to the tree or updates an existing one.
-func (t *Tree[T]) Set(entry string, data T) {
+func (t *Tree[T]) Set(entry string, data T) error {
 	if entry == "" {
 		if !t.root.isKey {
 			t.root.isKey = true
@@ -53,7 +53,7 @@ func (t *Tree[T]) Set(entry string, data T) {
 			t.size++
 		}
 		t.root.data = data
-		return
+		return nil
 	}
 
 	path := make([]*node[T], 0, 1)
@@ -70,7 +70,7 @@ func (t *Tree[T]) Set(entry string, data T) {
 			for _, n := range path {
 				n.size++
 			}
-			return
+			return nil
 		}
 
 		if entrySuffix == "" && edgeSuffix == "" {
@@ -84,13 +84,15 @@ func (t *Tree[T]) Set(entry string, data T) {
 				}
 			}
 			matchedEdge.destination.data = data
-			return
+			return nil
 		}
 
 		if entrySuffix == "" {
 			// The entry is a prefix of the label. New node before child.
 			entryEdge := newEdge(prefix, newNode[T](true, data))
-			currentNode.updateEdge(entryEdge)
+			if err := currentNode.updateEdge(entryEdge); err != nil {
+				return err
+			}
 			matchedEdge.label = edgeSuffix
 			entryEdge.destination.addEdge(matchedEdge)
 			t.size++
@@ -102,7 +104,7 @@ func (t *Tree[T]) Set(entry string, data T) {
 			for _, n := range path {
 				n.size++
 			}
-			return
+			return nil
 		}
 
 		if edgeSuffix == "" {
@@ -115,7 +117,9 @@ func (t *Tree[T]) Set(entry string, data T) {
 		// There's a common prefix. We need to split the edge.
 		var zero T
 		bridge := newEdge(prefix, newNode[T](false, zero))
-		currentNode.updateEdge(bridge)
+		if err := currentNode.updateEdge(bridge); err != nil {
+			return err
+		}
 		matchedEdge.label = edgeSuffix
 		bridge.destination.addEdge(matchedEdge)
 		newEntryNode := newEdge(entrySuffix, newNode[T](true, data))
@@ -129,7 +133,7 @@ func (t *Tree[T]) Set(entry string, data T) {
 		for _, n := range path {
 			n.size++
 		}
-		return
+		return nil
 	}
 }
 

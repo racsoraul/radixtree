@@ -66,10 +66,7 @@ func (t *Tree[T]) Set(entry string, data T) {
 			// No edge found. Create a new one.
 			currentNode.addEdge(newEdge[T](entry, newNode[T](true, data)))
 			t.size++
-			// Update sizes for all nodes in the path.
-			for _, n := range path {
-				n.size++
-			}
+			t.incrementPathSizes(path)
 			return
 		}
 
@@ -77,11 +74,9 @@ func (t *Tree[T]) Set(entry string, data T) {
 			// Exact match.
 			if !matchedEdge.destination.isKey {
 				matchedEdge.destination.isKey = true
+				matchedEdge.destination.size++
 				t.size++
-				// Update sizes for all nodes in the path.
-				for _, n := range path {
-					n.size++
-				}
+				t.incrementPathSizes(path)
 			}
 			matchedEdge.destination.data = data
 			return
@@ -98,10 +93,7 @@ func (t *Tree[T]) Set(entry string, data T) {
 			// It gets the old subtree size plus itself (1).
 			entryEdge.destination.size += matchedEdge.destination.size
 
-			// Update sizes for all nodes in the path.
-			for _, n := range path {
-				n.size++
-			}
+			t.incrementPathSizes(path)
 			return
 		}
 
@@ -125,11 +117,15 @@ func (t *Tree[T]) Set(entry string, data T) {
 		// Existing subtree size plus the new one (1).
 		bridge.destination.size = matchedEdge.destination.size + 1
 
-		// Update sizes for all nodes in the path.
-		for _, n := range path {
-			n.size++
-		}
+		t.incrementPathSizes(path)
 		return
+	}
+}
+
+// incrementPathSizes Increments the size for all nodes in the path.
+func (t *Tree[T]) incrementPathSizes(path []*node[T]) {
+	for _, n := range path {
+		n.size++
 	}
 }
 

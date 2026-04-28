@@ -3,7 +3,10 @@
 // It leverages Go iterators for a more natural API.
 package radixtree
 
-import "iter"
+import (
+	"iter"
+	"sort"
+)
 
 // labelBufferSize The size of a reusable buffer used to build complete labels.
 const labelBufferSize = 64
@@ -175,7 +178,94 @@ func (t *Tree[T]) Get(entry string) (T, bool) {
 // Delete Removes an entry from the tree. Returns true indicating
 // if the entry existed and was deleted, false otherwise.
 func (t *Tree[T]) Delete(entry string) bool {
-	panic("not implemented yet. Sorry!")
+	if entry == "" {
+		if t.root.isKey {
+			t.root.isKey = false
+			var zero T
+			t.root.data = zero
+			t.root.size--
+			t.size--
+			return true
+		}
+		return false
+	}
+
+	type pathStep struct {
+		node      *node[T]
+		labelByte byte
+	}
+	path := make([]pathStep, 0, 1)
+
+	currentNode := t.root
+
+	for {
+		matchedEdge, _, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
+		if matchedEdge.destination == nil {
+			return false
+		}
+
+		if entrySuffix != "" && edgeSuffix != "" {
+			// Partial match.
+			return false
+		}
+
+		if entrySuffix == "" {
+			if edgeSuffix == "" {
+				// Exact match.
+				if !matchedEdge.destination.isKey {
+					return false
+				}
+
+				// Mark as deleted and update sizes
+				matchedEdge.destination.isKey = false
+				var zero T
+				matchedEdge.destination.data = zero
+				t.size--
+				matchedEdge.destination.size--
+
+				for i := len(path) - 1; i >= 0; i-- {
+					parent := path[i].node
+					parent.size--
+				}
+
+				path = append(path, pathStep{node: currentNode, labelByte: matchedEdge.label[0]})
+
+				// Bottom-up compression
+				for i := len(path) - 1; i >= 0; i-- {
+					parent := path[i].node
+					labelByte := path[i].labelByte
+
+					num := len(parent.children)
+					index := sort.Search(num, func(j int) bool {
+						return parent.children[j].label[0] >= labelByte
+					})
+
+					childEdge := parent.children[index]
+					child := childEdge.destination
+
+					if child.size == 0 {
+						// Remove the edge
+						parent.children = append(parent.children[:index], parent.children[index+1:]...)
+					} else if !child.isKey && len(child.children) == 1 {
+						// Merge child with its only grandchild
+						grandchildEdge := child.children[0]
+						childEdge.label += grandchildEdge.label
+						childEdge.destination = grandchildEdge.destination
+						parent.children[index] = childEdge
+					}
+				}
+
+				return true
+			}
+			// Partial match. The entry is not a key node.
+			return false
+		}
+
+		path = append(path, pathStep{node: currentNode, labelByte: matchedEdge.label[0]})
+		// Move to the next child node.
+		currentNode = matchedEdge.destination
+		entry = entrySuffix
+	}
 }
 
 // LongestPrefix Returns the longest prefix of the entry that is also a key node in the tree.

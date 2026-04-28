@@ -588,6 +588,61 @@ func TestTree_KeysWithPrefix(t *testing.T) {
 
 }
 
+func TestTree_Len(t *testing.T) {
+	tree := New[int]()
+	if tree.Len() != 0 {
+		t.Fatalf("expected length 0, got %d", tree.Len())
+	}
+
+	// Adding a new entry
+	tree.Set("hello", 1)
+	if tree.Len() != 1 {
+		t.Fatalf("expected length 1, got %d", tree.Len())
+	}
+
+	// Updating an existing entry
+	tree.Set("hello", 2)
+	if tree.Len() != 1 {
+		t.Fatalf("expected length 1 after update, got %d", tree.Len())
+	}
+
+	// Adding an entry that is a prefix of an existing entry
+	tree.Set("he", 3)
+	if tree.Len() != 2 {
+		t.Fatalf("expected length 2, got %d", tree.Len())
+	}
+
+	// Adding an entry that shares a common prefix with an existing entry
+	tree.Set("hella", 4)
+	if tree.Len() != 3 {
+		t.Fatalf("expected length 3, got %d", tree.Len())
+	}
+
+	// Adding an entry that has an existing entry as its prefix
+	tree.Set("hellothere", 5)
+	if tree.Len() != 4 {
+		t.Fatalf("expected length 4, got %d", tree.Len())
+	}
+
+	// Adding an empty string entry
+	tree.Set("", 6)
+	if tree.Len() != 5 {
+		t.Fatalf("expected length 5 after adding empty string, got %d", tree.Len())
+	}
+
+	// Updating an empty string entry
+	tree.Set("", 7)
+	if tree.Len() != 5 {
+		t.Fatalf("expected length 5 after updating empty string, got %d", tree.Len())
+	}
+
+	// Adding another completely different entry
+	tree.Set("world", 8)
+	if tree.Len() != 6 {
+		t.Fatalf("expected length 6, got %d", tree.Len())
+	}
+}
+
 func setupDeepTree(t *Tree[int]) {
 	t.Set("a", 1)
 	t.Set("ab", 12)

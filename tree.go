@@ -275,33 +275,49 @@ func (t *Tree[T]) LongestPrefix(entry string) string {
 	}
 
 	currentNode := t.root
-	longestPrefix := ""
+	lastMatchedEnd := -1
+	if t.root.isKey {
+		lastMatchedEnd = 0
+	}
+
+	currentLen := 0
+	remainingEntry := entry
 
 	for {
-		matchedEdge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(entry)
+		matchedEdge, prefix, entrySuffix, edgeSuffix := currentNode.matchEdge(remainingEntry)
 		if matchedEdge.destination == nil {
-			return longestPrefix
+			break
 		}
 
 		if entrySuffix != "" && edgeSuffix != "" {
 			// Partial match.
-			return longestPrefix
+			break
 		}
 
 		if entrySuffix == "" {
 			if edgeSuffix == "" {
 				// Exact match.
-				return longestPrefix + prefix
+				if matchedEdge.destination.isKey {
+					return entry
+				}
 			}
 			// Partial match. The entry is not a key node.
-			return longestPrefix
+			break
 		}
 
 		// Move to the next child node.
 		currentNode = matchedEdge.destination
-		entry = entrySuffix
-		longestPrefix += prefix
+		remainingEntry = entrySuffix
+		currentLen += len(prefix)
+		if currentNode.isKey {
+			lastMatchedEnd = currentLen
+		}
 	}
+
+	if lastMatchedEnd == -1 {
+		return ""
+	}
+	return entry[:lastMatchedEnd]
 }
 
 // KeysWithPrefix Returns a list of entry's keys in the tree that start with the given prefix.

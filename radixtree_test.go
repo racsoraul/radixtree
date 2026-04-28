@@ -373,6 +373,179 @@ func TestTree_LongestPrefix(t *testing.T) {
 	}
 }
 
+func TestTree_Delete(t *testing.T) {
+	testCases := []struct {
+		name           string
+		setup          func(*Tree[int])
+		deleteKey      string
+		expectedReturn bool
+		expectedLen    int
+		checkAfter     func(*testing.T, *Tree[int])
+	}{
+		{
+			name:           "delete from empty tree",
+			setup:          func(t *Tree[int]) {},
+			deleteKey:      "hello",
+			expectedReturn: false,
+			expectedLen:    0,
+			checkAfter:     func(t *testing.T, tree *Tree[int]) {},
+		},
+		{
+			name: "delete non-existent key",
+			setup: func(t *Tree[int]) {
+				t.Set("hello", 50)
+			},
+			deleteKey:      "world",
+			expectedReturn: false,
+			expectedLen:    1,
+			checkAfter: func(t *testing.T, tree *Tree[int]) {
+				val, found := tree.Get("hello")
+				if !found || val != 50 {
+					t.Fatalf("expected 'hello' to still be present")
+				}
+			},
+		},
+		{
+			name: "delete single entry",
+			setup: func(t *Tree[int]) {
+				t.Set("hello", 50)
+			},
+			deleteKey:      "hello",
+			expectedReturn: true,
+			expectedLen:    0,
+			checkAfter: func(t *testing.T, tree *Tree[int]) {
+				_, found := tree.Get("hello")
+				if found {
+					t.Fatalf("expected 'hello' to be deleted")
+				}
+				if len(tree.root.children) != 0 {
+					t.Fatalf("expected root to have no children after deleting only entry, got %d", len(tree.root.children))
+				}
+			},
+		},
+		{
+			name: "delete entry that is prefix of another",
+			setup: func(t *Tree[int]) {
+				t.Set("he", 25)
+				t.Set("hello", 50)
+			},
+			deleteKey:      "he",
+			expectedReturn: true,
+			expectedLen:    1,
+			checkAfter: func(t *testing.T, tree *Tree[int]) {
+				_, found := tree.Get("he")
+				if found {
+					t.Fatalf("expected 'he' to be deleted")
+				}
+				val, found := tree.Get("hello")
+				if !found || val != 50 {
+					t.Fatalf("expected 'hello' to still be present")
+				}
+			},
+		},
+		{
+			name: "delete entry that has a prefix as another entry (causes merge)",
+			setup: func(t *Tree[int]) {
+				t.Set("he", 25)
+				t.Set("hello", 50)
+			},
+			deleteKey:      "hello",
+			expectedReturn: true,
+			expectedLen:    1,
+			checkAfter: func(t *testing.T, tree *Tree[int]) {
+				_, found := tree.Get("hello")
+				if found {
+					t.Fatalf("expected 'hello' to be deleted")
+				}
+				val, found := tree.Get("he")
+				if !found || val != 25 {
+					t.Fatalf("expected 'he' to still be present")
+				}
+
+				// Verify structure: 'he' node should have no children now because 'llo' edge is removed.
+				// Wait, root -> 'he' -> end.
+				matchedEdge, _, _, _ := tree.root.matchEdge("he")
+				if len(matchedEdge.destination.children) != 0 {
+					t.Fatalf("expected 'he' node to have no children, got %d", len(matchedEdge.destination.children))
+				}
+			},
+		},
+		{
+			name: "delete intermediate non-key node causing merge",
+			setup: func(t *Tree[int]) {
+				t.Set("hello", 50)
+				t.Set("hella", 51)
+				// tree structure: root -> "hell" -> "o"(key) and "a"(key)
+			},
+			deleteKey:      "hello",
+			expectedReturn: true,
+			expectedLen:    1,
+			checkAfter: func(t *testing.T, tree *Tree[int]) {
+				_, found := tree.Get("hello")
+				if found {
+					t.Fatalf("expected 'hello' to be deleted")
+				}
+				val, found := tree.Get("hella")
+				if !found || val != 51 {
+					t.Fatalf("expected 'hella' to still be present")
+				}
+				// Verify structure: 'hell' should be merged with 'a' to form 'hella' directly from root
+				matchedEdge, _, _, _ := tree.root.matchEdge("h")
+				if matchedEdge.label != "hella" {
+					t.Fatalf("expected merged edge 'hella', got %q", matchedEdge.label)
+				}
+			},
+		},
+		{
+			name: "delete empty string",
+			setup: func(t *Tree[int]) {
+				t.Set("", 99)
+				t.Set("hello", 50)
+			},
+			deleteKey:      "",
+			expectedReturn: true,
+			expectedLen:    1,
+			checkAfter: func(t *testing.T, tree *Tree[int]) {
+				_, found := tree.Get("")
+				if found {
+					t.Fatalf("expected empty string to be deleted")
+				}
+				if tree.root.isKey {
+					t.Fatalf("expected root isKey to be false")
+				}
+				if tree.root.data != 0 {
+					t.Fatalf("expected root data to be zeroed")
+				}
+			},
+		},
+		{
+			name: "delete partial match fails",
+			setup: func(t *Tree[int]) {
+				t.Set("hello", 50)
+			},
+			deleteKey:      "hel",
+			expectedReturn: false,
+			expectedLen:    1,
+			checkAfter:     func(t *testing.T, tree *Tree[int]) {},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := New[int]()
+			tc.setup(tree)
+			deleted := tree.Delete(tc.deleteKey)
+			if deleted != tc.expectedReturn {
+				t.Fatalf("expected Delete to return %v, got %v", tc.expectedReturn, deleted)
+			}
+			if tree.Len() != tc.expectedLen {
+				t.Fatalf("expected tree length %d, got %d", tc.expectedLen, tree.Len())
+			}
+			tc.checkAfter(t, tree)
+		})
+	}
+}
+
 func TestTree_KeysWithPrefix(t *testing.T) {
 	tree := New[int]()
 	setupMultipleEntries(tree)
